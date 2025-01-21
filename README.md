@@ -147,7 +147,7 @@ filter{
 결과 화면에 단순히 키워드에 대한 score 전략으로는 충분한 데이터 필터링이 되지 않기 때문에 카테고리의 가중치가 더 클 것이라 생각했다.
 
 
-![image](https://github.com/user-attachments/assets/11bd6f04-ea2e-4cbb-aec4-2de311369231)
+![image](https://github.com/user-attachments/assets/5a36be55-484e-4436-8f1e-7234326a030b)
 
 
 후드라는 키워드를 검색하게 되면 후드 집업이라는 단순히 후드라는 상품명을 가진 제품이 더 상위에 포진해야 된다.<br>
@@ -172,3 +172,14 @@ filter{
 기본적으로 Logstash는 UTC 시간대를 표준으로 사용하고 있으며 이로 인해 데이터 삽입 과정에서 KST로 설정된 시간과 9시간 차이나는 값으로 삽입이 이루어짐.
 
 
+### DB connection 문제
+![image](https://github.com/user-attachments/assets/bb6100ea-93e9-41ac-9090-bd1b89d9e9c3)
+
+
+원격 데이터베이스에 접근하지 못하는 문제가 발생했다.
+
+
+```
+set global max_connect_errors = 10000;
+set global max_connections=300;
+```
