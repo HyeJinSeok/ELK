@@ -1,4 +1,4 @@
-# ELK 기반 주문 데이터 모니터링
+
 
 
 ## 팀원 소개
@@ -268,7 +268,35 @@ filter{
 
 
 ## Kibana를 통한 시각화
+- 상품 구매 내역 데이터를 기반으로 **△일별 주문 건수 및 매출 △2025년 주문 현황 △2025년 일일 매출 △우수회원 △브랜드별 성별 인기도** 를 시각화하여 모니터링 대시보드 구축
+<p align="center">
+    <img src="https://github.com/user-attachments/assets/5a1ff338-a490-4629-bc60-a852345b00ce" alt="Image" style="width:90%;">
+</p>
 
+1. 일별 주문 건수 및 매출
+<p align="center">
+    <img src="https://github.com/user-attachments/assets/d3c8c4cf-cb32-4866-98fa-741a416e1267" alt="Image" style="width:70%;">
+</p>
+
+2. 2025년 주문 현황 
+<p align="center">
+    <img src="https://github.com/user-attachments/assets/cdae1158-01dc-4726-b1ab-b7cfabe91b13" alt="Image" style="width:50%;">
+</p>
+
+3. 2025년 일일 매출
+<p align="center">
+    <img src="https://github.com/user-attachments/assets/69eb93f4-70f8-4a1a-8573-0a09876221b6" alt="Image" style="width:50%;">
+</p>
+
+4. 우수회원
+<p align="center">
+    <img src="https://github.com/user-attachments/assets/243ff5c7-ea8d-450b-9b1a-4c70020680c2" alt="Image" style="width:50%;">
+</p>
+
+5. 브랜드별 성별 인기도
+<p align="center">
+    <img src="https://github.com/user-attachments/assets/cdee7b43-a5fc-4f04-8810-8c6d3237b87b" alt="Image" style="width:50%;">
+</p>
 
 
 
