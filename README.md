@@ -833,31 +833,24 @@ GET /musinsa_with_nori/_search
 ## 트러블 슈팅
 
 
-### Timezone 세팅 문제
+### Timezone 세팅 및 새로운 정보 update 문제
 
 
-기본적으로 Logstash는 UTC 시간대를 표준으로 사용하고 있으며 이로 인해 데이터 삽입 과정에서 KST로 설정된 시간과 9시간 차이나는 값으로 삽입이 이루어짐.
-
-
-### DB connection 문제
-![image](https://github.com/user-attachments/assets/bb6100ea-93e9-41ac-9090-bd1b89d9e9c3)
-
-
-원격 데이터베이스에 접근하지 못하는 문제가 발생했다.
+기본적으로 Logstash는 UTC 시간대를 표준으로 사용하고 있으며 이로 인해 데이터 삽입 과정에서 KST로 설정된 시간과 9시간 차이나는 값으로 삽입이 이루어진다.
 
 
 ```
-set global max_connect_errors = 10000;
-set global max_connections=300;
+SELECT * FROM `customerorder` WHERE updated_at > :sql_last_value
 ```
 
 
-### Elastic Search의 text와 keyword
+updated_at을 기준으로 새로 추가된 데이터를 ES 상에 추가하기 때문에 시간을 정상적으로 인식하지 못하게 되었다.
 
 
-### 새로운 정보 update 문제
+데이터베이스의 order_no과 document의 _id 값을 매핑이 되도록 해 덮어쓰기를 진행하는 과정을 통해 데이터가 지속적으로 쌓이지 않도록 했다.
 
-5초마다 업데이트 될때마다 새로운 정보를 업데이트 하는 것이 아닌 처음부터 모든 데이터를 업데이트 하게 되어 데이터가 116,110까지 쌓이게 되고, 비효율적으로 업데이트를 하게됨.
+
+그러나 이를 반영하지 못하는 팀원의 케이스도 발생했으며 이로 인해 5초마다 업데이트 될때마다 새로운 정보를 업데이트 하는 것이 아닌 처음부터 모든 데이터를 업데이트 하게 되어 데이터가 116,110까지 쌓이게 되고, 비효율적으로 업데이트를 하게되었다.
 <br>
 
 <p align="center">
@@ -865,8 +858,8 @@ set global max_connections=300;
 </p>
 
 <br>
-order_no 칼럼을 기준으로 새로운 데이터가 업데이트 되도록 설정.  
-또한 마지막으로 가져온 정보를 `C:\\00.dataSet\\logstash_jdbc_last_run` 경로에 저장하여 Logstash를 실행하면 이 파일을 읽고 마지막으로 실행된 `order_no`를 확인하고 새로운 데이터를 업데이트함.
+order_no 칼럼을 기준으로 새로운 데이터가 업데이트 되도록 설정했다.  
+또한 마지막으로 가져온 정보를 `C:\\00.dataSet\\logstash_jdbc_last_run` 경로에 저장하여 Logstash를 실행하면 이 파일을 읽고 마지막으로 실행된 `order_no`를 확인하고 새로운 데이터를 업데이트했다.
 
 ```ruby
 use_column_value => true
@@ -876,7 +869,96 @@ last_run_metadata_path => "C:\\00.dataSet\\logstash_jdbc_last_run"
 schedule => "*/5 * * * * *"  # 5초마다 실행
 ```
 
-가장 마지막 order_no 내용만 업데이트 되고 있음을 확인.
+가장 마지막 order_no 내용만 업데이트 되고 있음을 확인했다.
 <br>
 
 ![트러블슈팅-after](https://github.com/user-attachments/assets/a7f799ee-6ea8-47cc-af2a-7773d0c1912f)
+
+### DB connection 문제
+![image](https://github.com/user-attachments/assets/bb6100ea-93e9-41ac-9090-bd1b89d9e9c3)
+
+
+원격 데이터베이스에 접근하지 못하는 문제가 발생했다.
+
+
+원격 서버에서 MySQL 서버로 연결한 뒤 close를 하면 MySQL은 비정상적인 접속으로 판단해 해당 IP를 블락 처리한다고 한다.
+
+이 때 MySQL에서 이와 같은 비정상적인 접속 요청 수를 카운팅해서 global.max_connect_errors에 지정된 값을 넘기면 자동 블락 처리가 되어 생긴 이슈다.
+
+
+```
+set global max_connect_errors = 10000;
+set global max_connections=300;
+flush hosts;
+```
+
+
+위의 명령어를 통해 max_connect_errors 값을 증가시키고 그 동안의 접속 요청 기록을 초기화 해주는 과정을 통해 정상적으로 원격 데이터베이스에 다시 접속할 수 있었다.
+
+
+### Elastic Search의 text와 keyword
+
+
+- Elasticsearch 필드 타입: `keyword` vs `text`
+
+
+| **특징**                | **`keyword`**                                          | **`text`**                                              |
+|------------------------|-----------------------------------------------------|-------------------------------------------------------|
+| **용도**               | 정렬, 집계, 필터링에 적합 (정확히 일치하는 값을 비교).       | 검색, 분석, 자연어 처리를 위해 적합.                        |
+| **저장 방식**            | 전체 문자열이 인덱싱되고, 분석되지 않음.                     | 텍스트를 분석(토크나이징)하여 여러 토큰으로 저장.               |
+| **토크나이저**            | 없음 (문자열 전체를 하나의 값으로 저장).                   | 텍스트를 공백, 구두점 등을 기준으로 나누어 여러 토큰으로 저장.     |
+| **검색 동작**            | 정확히 일치하는 값만 검색 가능.                              | 텍스트의 부분적 일치(예: "후드" 포함) 검색 가능.               |
+| **Aggregation 지원 여부** | 지원 (집계와 정렬 가능).                                    | 기본적으로 지원되지 않음 (집계를 위해선 `fielddata` 활성화 필요). |
+| **데이터 크기**           | 저장 크기가 작음 (원본 값만 저장).                          | 토큰화된 데이터를 추가로 저장하므로 저장 크기가 더 큼.             |
+
+---
+
+
+### **문제**
+`text` 필드를 Aggregation에 사용하려고 하면 다음과 같은 오류가 발생한다:
+
+```json
+{
+  "error": {
+    "type": "illegal_argument_exception",
+    "reason": "Fielddata is disabled on text fields by default. Set fielddata=true on [field_name] in order to load field data by uninverting the inverted index."
+  }
+}
+```
+
+
+text 필드가 검색과 분석을 위해 설계되어 있으며, Aggregation처럼 정확한 값을 요구하는 작업을 지원하지 않기 때문이다.
+
+
+또한 keyword에 analyzer를 설정할 수 없었다.
+
+
+keyword 타입은 데이터를 토큰화하거나 분석하지 않는다.
+
+
+반면 **analyzer**는 텍스트를 분리하고 형태소 분석을 수행하도록 설계되었다.
+
+
+두 개념이 충돌하므로 keyword 타입에서 analyzer를 설정할 수 없다.
+
+
+- 해결책
+
+
+Aggregation에서 text 활용법
+
+
+```
+PUT /index_name/_mapping
+{
+  "properties": {
+    "field_name": {
+      "type": "text",
+      "fielddata": true
+    }
+  }
+}
+```
+
+
+field에 대한 fielddata를 true로 설정해주는 과정을 통해 text 필드를 Aggregation function에 사용할 수 있다.
