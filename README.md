@@ -1,7 +1,12 @@
-# ELK를 통한 추천 서비스 따라잡기
+# 프로젝트 이름
 
 
 ## 팀원 소개
+
+
+|<img src="https://avatars.githubusercontent.com/u/193798531?v=4" width="150" height="150"/>|<img src="https://avatars.githubusercontent.com/u/74342019?v=4" width="150" height="150"/>|<img src="https://avatars.githubusercontent.com/u/153366521?v=4" width="150" height="150"/>|<img src="https://avatars.githubusercontent.com/u/127267532?v=4" width="150" height="150"/>|
+|:-:|:-:|:-:|:-:|
+|김리영 (Kim Ri-yeong)<br/>[@riyeong0916](https://github.com/riyeong0916)|Ryan Na<br/>[@CooolRyan](https://github.com/CooolRyan)|Park ji hye<br/>[@parkjhhh](https://github.com/parkjhhh)|[@HyeJinSeok](https://github.com/HyeJinSeok)|
 
 
 ## 프로젝트 소개
@@ -16,6 +21,33 @@
 
 무신사에서는 일부 크롤링을 허용해주는 것을 robots.txt를 통해 확인할 수 있었다. 직접 크롤링하는데 시간이 걸리기 때문에 [해시스크래퍼](https://www.hashscraper.com/) 사이트에서 제공하는 무료 크롤링 기능을 활용해 상품 데이터를 추출해와서 활용했다.<br>
 크롤링한 데이터를 기반으로 주문자 정보 더미 데이터를 만드는 과정을 ChatGPT를 통해 진행했다.
+
+
+### 1. 데이터 파이프라인 구축 
+MySQL 데이터베이스에서 데이터를 추출하여 Logstash를 통해 Elasticsearch로 전송하는 데이터 파이프라인을 구축하는 방법을 실습함
+<br>
+
+![image](https://github.com/user-attachments/assets/cfb9084e-3dfe-416e-8784-711cefbd065f)
+
+
+### 2. 데이터 처리
+
+DB의 테이블 데이터를 수집, 변환, 필터링하고 Elasticsearch에 적합하게 저장함
+<br>
+
+![image](https://github.com/user-attachments/assets/3c889787-f50e-4981-ba3a-3bf68abe4c28)
+
+
+### 3. Elasticsearch 활용
+
+Elasticsearch를 활용해 빠른 검색과 분석을 수행하며, 특히 Kibana를 이용한 데이터 시각화로 분석 효율성을 극대화함.
+<br>
+
+![image](https://github.com/user-attachments/assets/b8a56d4a-615c-482e-9e9e-9270f546285c)
+
+<br>
+
+<br>
 
 ## JDBC를 통한 Logstash와 Elastic Search 연동
 
@@ -113,7 +145,10 @@ filter{
 
 
 
-## 스코어링 전략
+## 무신사 검색 정렬 알고리즘 톺아보기
+
+
+### 스코어링 전략
 
 
 무신사에서 "후드"를 검색하게 되면 후드 집업이 아닌 후드티 상품이 상위 데이터로 검색되는 화면을 볼 수 있다.
@@ -158,7 +193,7 @@ filter{
 
 
 
-## Aggregation을 통한 상품 추천
+### Nori를 사용한 Analyze
 
 
 
