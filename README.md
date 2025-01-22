@@ -624,7 +624,9 @@ GET /musinsa_with_nori/_search
 
 
 
-- 결과 화면 비교
+- 결과 화면 비교 및 개선
+
+
 
 
 기존의 aggregation function을 통한 count를 진행하게 되면 product_name의 전체 value를 기준으로 count 되는 모습을 보여주었다.
@@ -645,6 +647,22 @@ GET /musinsa_with_nori/_search
 
 
 이는 nori analyze에서 제공하는 복합어 처리 과정에서 단어가 분리되는 것이다. 그러나 이런 형태로 데이터 분석을 진행하게 된다면 정확한 분석이 불가능할 것이라 생각했다.
+
+
+```
+"analysis": {
+  "tokenizer": {
+    "nori_tokenizer": {
+      "type": "nori_tokenizer",
+      "decompound_mode": "mixed"  // 복합어 및 원래 단어
+    }
+  }
+```
+
+
+이를 해결하기 위해 인덱스 생성 시 decompound_mode 설정을 mix로 설정해 복합어 분리가 되지 않은 데이터 또한 같이 확인할 수 있었다.
+
+
 
 
 
