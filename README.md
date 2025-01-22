@@ -1,5 +1,5 @@
 # ELK는 무진장 무신사랑해
-
+<br>
 
 ## 팀원 소개
 
@@ -202,6 +202,7 @@ input {
 
 schedule의 경우 빠른 실행 결과를 확인하기 위해 5초 단위로 설정했다.
 
+<br>
 
 ##  데이터 필터링 
 
@@ -244,11 +245,11 @@ filter {
 
 
 데이터 가공을 위해 먼저 카테고리 필터링과 주문자 주소 정보 필터링을 진행했다.
-<br><br>
 
 
 ![image](https://github.com/user-attachments/assets/9967ac39-d6ae-46f8-8555-ee0efa7ef456)
 
+<br>
 
 ```
 filter{
@@ -276,6 +277,7 @@ filter{
 }
 ```
 
+<br>
 
 ## Kibana를 통한 시각화
 - 상품 구매 내역 데이터를 기반으로 **△일별 주문 건수 및 매출 △2025년 주문 현황 △2025년 일일 매출 △우수회원 △브랜드별 성별 인기도** 를 시각화하여 모니터링 대시보드 구축
@@ -308,7 +310,7 @@ filter{
     <img src="https://github.com/user-attachments/assets/cdee7b43-a5fc-4f04-8810-8c6d3237b87b" alt="Image" style="width:50%;">
 </p>
 
-
+<br>
 
 ## 무신사 검색 정렬 알고리즘 톺아보기
 
@@ -325,6 +327,7 @@ filter{
 
 ![image](https://github.com/user-attachments/assets/52c41069-5728-433f-b088-b553cf1ccf9d)
 
+<br>
 
 ### 스코어링 전략
 
@@ -664,7 +667,7 @@ BM25 값을 직접 조정하게 되면서 score 값 또한 더 확실한 차이�
           "sub_category" : " 후드 집업",
       },
 ```
-
+<br>
 
 #### `function_score`와 `script_score` 비교
 
@@ -680,9 +683,10 @@ BM25 값을 직접 조정하게 되면서 score 값 또한 더 확실한 차이�
 | **적용 가능한 함수**         | 가중치(`weight`), 필드 기반(`field_value_factor`), 필터(`filter`). | 사용자 정의 계산식 (BM25 스코어 포함).                    |
 | **권장 상황**              | 단순한 가중치 조정이 필요한 경우.                              | 복잡한 조건이나 사용자 정의 계산식이 필요한 경우.            |
 
-<br><br>
+<br>
 
-
+---
+<br>
 
 ### Nori를 사용한 Analyze
 
@@ -890,6 +894,8 @@ schedule => "*/5 * * * * *"  # 5초마다 실행
 
 ![트러블슈팅-after](https://github.com/user-attachments/assets/a7f799ee-6ea8-47cc-af2a-7773d0c1912f)
 
+<br>
+
 ### DB connection 문제
 ![image](https://github.com/user-attachments/assets/bb6100ea-93e9-41ac-9090-bd1b89d9e9c3)
 
@@ -911,6 +917,7 @@ flush hosts;
 
 위의 명령어를 통해 max_connect_errors 값을 증가시키고 그 동안의 접속 요청 기록을 초기화 해주는 과정을 통해 정상적으로 원격 데이터베이스에 다시 접속할 수 있었다.
 
+<br>
 
 ### Elastic Search의 text와 keyword
 
@@ -929,6 +936,7 @@ flush hosts;
 
 ---
 
+<br>
 
 ### **문제**
 `text` 필드를 Aggregation에 사용하려고 하면 다음과 같은 오류가 발생한다:
@@ -979,6 +987,7 @@ PUT /index_name/_mapping
 
 field에 대한 fielddata를 true로 설정해주는 과정을 통해 text 필드를 Aggregation function에 사용할 수 있다.
 
+<br>
 
 ## 회고
 
