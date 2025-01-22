@@ -1,4 +1,4 @@
-
+# ELK는 무진장 무신사랑해
 
 
 ## 팀원 소개
@@ -14,10 +14,10 @@
 
 
 실제 ElasticSearch가 활용되는 분야를 고민하던 중  △로그 수집과 분석 △추천 알고리즘을 떠올릴 수 있었다. <br>
-그 중 고객 데이터를 활용해 **상품 구매 내역을 분석 및 검색하여 더 나은 추천 알고리즘을 구현**하는 방안을 모색했다. <br>
+그 중 고객 데이터를 활용해 **상품 구매 내역 분석 및 검색 알고리즘을 구현 방식을 탐구**하는 방안을 모색했다. <br>
 <br>
 나아가, 분석 결과를 보다 직관적으로 이해하고 활용하기 위해 Kibana를 사용하여 **데이터를 시각화**했으며 <br>
- 고객 구매 패턴과 추천 알고리즘 성능을 한눈에 파악할 수 있도록 대시보드를 구성했다.
+고객 구매 패턴과 추천 알고리즘 성능을 한눈에 파악할 수 있도록 대시보드를 구성했다.
 
 <br>
 
@@ -151,7 +151,7 @@ create table customerorder(
 <br>
 
 ### 1. 데이터 파이프라인 구축 
-MySQL 데이터베이스에서 데이터를 추출하여 Logstash를 통해 Elasticsearch로 전송하는 데이터 파이프라인을 구축하는 방법을 실습함
+MySQL 데이터베이스에서 데이터를 추출하여 Logstash를 통해 Elasticsearch로 전송하는 데이터 파이프라인을 구축하는 방법을 실습했다.
 <br>
 
 ![alt text](/images/relation1.png)
@@ -159,7 +159,7 @@ MySQL 데이터베이스에서 데이터를 추출하여 Logstash를 통해 Elas
 
 ### 2. 데이터 처리
 
-DB의 테이블 데이터를 수집, 변환, 필터링하고 Elasticsearch에 적합하게 저장함
+DB의 테이블 데이터를 수집, 변환, 필터링하고 Elasticsearch에 적합하게 저장했다.
 <br>
 
 <img src="https://github.com/user-attachments/assets/3c889787-f50e-4981-ba3a-3bf68abe4c28" width="300px" />
@@ -167,7 +167,7 @@ DB의 테이블 데이터를 수집, 변환, 필터링하고 Elasticsearch에 �
 
 ### 3. Elasticsearch 활용
 
-Elasticsearch를 활용해 빠른 검색과 분석을 수행하며, 특히 Kibana를 이용한 데이터 시각화로 분석 효율성을 극대화함.
+Elasticsearch를 활용해 빠른 검색과 분석을 수행하며, 특히 Kibana를 이용한 데이터 시각화로 분석 효율성을 극대화했다.
 <br>
 
 <img src="images/image3.png" alt="alt text" width="300px" />
@@ -194,7 +194,19 @@ input {
 ```
 
 
+원격 데이터베이스를 사용했으며 해당 데이터에 접근하기 위해 이전 프로젝트와 동일한 방식의 포워딩을 설정했다.
+
+
+이 때 데이터베이스에서 정보를 가져와 Elastic Search로 전달하는 과정을 1초 단위로 진행했으며 :sql_last_value를 통해 전체 값을 insert하는 것이 아닌 Elastic Search에 존재하지 않는 데이터에 한해서만 insert 할 수 있도록 진행했다.
+
+
+schedule의 경우 빠른 실행 결과를 확인하기 위해 5초 단위로 설정했다.
+
+
 ##  데이터 필터링 
+
+
+![image](https://github.com/user-attachments/assets/43487d17-d2c1-4afd-8050-f88eaf3e48a6)![image](https://github.com/user-attachments/assets/f80c44cd-c2c1-4f73-989b-c7c9abeffb95)
 
 
 ```
@@ -228,10 +240,14 @@ filter {
   }
 }
 ```
-<br><br><br><br>
+<br>
 
 
 데이터 가공을 위해 먼저 카테고리 필터링과 주문자 주소 정보 필터링을 진행했다.
+<br><br>
+
+
+![image](https://github.com/user-attachments/assets/9967ac39-d6ae-46f8-8555-ee0efa7ef456)
 
 
 ```
@@ -962,3 +978,15 @@ PUT /index_name/_mapping
 
 
 field에 대한 fielddata를 true로 설정해주는 과정을 통해 text 필드를 Aggregation function에 사용할 수 있다.
+
+
+## 회고
+
+
+석혜진 : ElasticSearch와 MySQL을 연결하기 위해 Logstash에 JDBC 설정을 구성하는 프로세스를 이해하게 되었다. 이후 Kibana를 활용하여 데이터를 시각화하는 과정에서 Logstash의 conf 파일에 필터를 구성하고, KQL 명령어를 익히는 실습을 수행했다. 추후에는 대용량 데이터를 삽입하고 효율적으로 전처리하는 과정을 실습해볼 계획이다.
+
+
+박지혜 : ElasticSearch와 Logstash, Kibana를 통해 실생활에 사용되는 데이터를 로그하고 모니터링 해보았다. 원격 데이터베이스를 연결하는 과정에서 JDBC Driver의 버전이 달라서 연결이 정상적으로 이루어지지 않는 이슈가 발생하긴 했지만 다시 Driver을 8버전으로 설치하고 logstash를 실행시켜보니 연결이 정상적으로 되었다. 이런 DB연결 문제, 예를 들어 버전이 달라서 생기는 문제를 더 자세히 학습하고 보다 더 순조롭게 프로젝트를 진행할 수 있도록 해야겠다.
+
+
+나원호 : 
