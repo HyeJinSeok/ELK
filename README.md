@@ -539,7 +539,9 @@ POST /musinsa/_search
           "sub_category" : " 후드 집업"
         }
 ```
-<br><br>
+<br>
+
+- script_score를 통한 score 차이 개선
 
 
 위에서 사용한 예시는 function_score 조정을 통한 결과를 확인한 것이다.
@@ -749,8 +751,6 @@ GET /musinsa_with_nori/_search
 ```
 
 
-
-
 - 결과 화면 비교 및 개선
 
 
@@ -790,8 +790,15 @@ GET /musinsa_with_nori/_search
 이를 해결하기 위해 인덱스 생성 시 decompound_mode 설정을 mix로 설정해 복합어 분리가 되지 않은 데이터 또한 같이 확인할 수 있었다.
 
 
-
-
+```
+     "tokenizer": {
+        "nori_tokenizer": {
+          "type": "nori_tokenizer",
+          "user_dictionary": "analysis/userdict_ko.txt"
+        }
+      }
+```
+사용자 정의 사전을 포함한 nori 활용을 위해서는 위의 코드와 같이 user_dictionary를 포함해서 사용할 수 있다.
 
 
 
