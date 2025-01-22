@@ -412,9 +412,240 @@ POST /musinsa/_search
           "sub_category" : " 후드 집업"
         }
 ```
+<br><br>
+
+
+위에서 사용한 예시는 function_score 조정을 통한 결과를 확인한 것이다.
+
+
+script_score 조정을 진행하게 되면 BM25 결과 값을 직접 조정할 수 있다.
+
+
+```
+POST /musinsa/_search
+{
+  "query": {
+    "script_score": {
+      "query": {
+        "match": {
+          "product_name": "후드"
+        }
+      },
+      "script": {
+        "source": """
+          double score = _score;
+
+          // 상위 카테고리 가중치
+          if (doc['top_category'].value == '상의') {
+            score += 3.0;
+          } else if (doc['top_category'].value == '아우터') {
+            score += 0.5;
+          }
+
+          // 하위 카테고리 가중치
+          if (doc['sub_category'].value == '후드 티셔츠') {
+            score += 2.0;
+          } else if (doc['sub_category'].value == '후드 집업') {
+            score += 0.5;
+          }
+
+          return score;
+        """
+      }
+    }
+  }
+}
+```
+
+BM25 값을 직접 조정하게 되면서 score 값 또한 더 확실한 차이를 만들어낼 수 있었다.
+
+
+```
+      {
+        "_index" : "musinsa",
+        "_type" : "_doc",
+        "_id" : "3",
+        "_score" : 4.402894,
+        "_source" : {
+          "category" : [
+            "상의 ",
+            " 후드 티셔츠"
+          ],
+          "top_category" : "상의 ",
+          "product_name" : "그래픽 베이직 후드",
+          "sub_category" : " 후드 티셔츠",
+        }
+      },
+      {
+        "_index" : "musinsa",
+        "_type" : "_doc",
+        "_id" : "111",
+        "_score" : 1.9028943,
+        "_source" : {
+          "category" : [
+            "아우터 ",
+            " 후드 집업"
+          ],
+          "top_category" : "아우터 ",
+          "product_name" : "투웨이 후드 집업",
+          "sub_category" : " 후드 집업",
+      },
+```
+
+
+#### `function_score`와 `script_score` 비교
+
+
+| **특징**                  | **`function_score`**                                       | **`script_score`**                                      |
+|--------------------------|---------------------------------------------------------|-------------------------------------------------------|
+| **BM25 스코어 사용 여부**    | BM25 스코어를 기반으로 가중치를 조정 (BM25 스코어를 변경하지 않음).  | BM25 스코어를 포함하여 사용자 정의 점수 계산 가능 (직접 변경 가능). |
+| **작동 방식**              | BM25 스코어에 가중치를 곱하거나 더해 점수를 조정.              | `_score`를 기반으로 사용자 정의 계산식을 작성하여 점수 계산.       |
+| **스코어 계산 공식**        | 최종 스코어 = BM25 스코어 × 가중치                          | 최종 스코어 = 사용자 정의 계산식                              |
+| **유연성**                 | 사전 정의된 함수(`weight`, `boost_mode` 등) 사용.          | 사용자 정의 스크립트를 통해 세부 계산식 작성 가능.         |
+| **성능**                  | 빠름 (사전 정의된 함수만 사용).                              | 상대적으로 느림 (스크립트 실행 시 계산 오버헤드 발생).       |
+| **사용 목적**              | 가중치 조정 및 필터링을 통한 점수 개선.                         | 점수 계산식이나 복잡한 조건을 유연하게 처리.                |
+| **적용 가능한 함수**         | 가중치(`weight`), 필드 기반(`field_value_factor`), 필터(`filter`). | 사용자 정의 계산식 (BM25 스코어 포함).                    |
+| **권장 상황**              | 단순한 가중치 조정이 필요한 경우.                              | 복잡한 조건이나 사용자 정의 계산식이 필요한 경우.            |
+
+<br><br>
+
 
 
 ### Nori를 사용한 Analyze
+
+
+![image](https://github.com/user-attachments/assets/e0311c39-5271-45bb-97fa-706c58f60b09)
+<br><br>
+
+
+무신사의 검색 서비스 프로토타입에서 형태소 분석을 위한 토크나이저로 Nori(Lucene의 한글 형태소 분석기)의 파이썬 버전 Pynori를 사용했다.
+
+
+이를 통해 동의어 및 사용자 사전을 커스텀하게 적용할 수 있기 때문에, 기존에 무신사 검색 서비스에서 사용 중이던 사전을 그대로 적용하여 최대한 실제 서비스와 비슷한 시뮬레이션 환경을 구현해냈다.
+
+
+여기서 착안해 elastice search에서 제공하는 nori를 통한 상품 데이터 분석을 진행해보고자 했다.
+
+
+```
+elasticsearch-plugin install analysis-nori
+```
+
+
+먼저 nori를 사용하기 위한 plugin 설치를 진행한다.
+
+
+```
+PUT /musinsa_with_nori
+{
+  "settings": {
+    "analysis": {
+      "analyzer": {
+        "nori_analyzer": {
+          "type": "custom",
+          "tokenizer": "nori_tokenizer",
+          "filter": ["lowercase", "nori_readingform", "nori_part_of_speech"]
+        }
+      },
+      "filter": {
+        "nori_part_of_speech": {
+          "type": "nori_part_of_speech",
+          "stoptags": ["E", "IC", "J", "MAG", "MAJ", "MM", "SP", "SSC", "SSO", "SY", "UNA", "UNKNOWN", "VA", "VCN", "VCP", "VV", "VX", "XPN", "XR", "XSA", "XSN", "XSV"]
+        }
+      }
+    }
+  },
+  "mappings": {
+    "properties": {
+      "@timestamp": { "type": "date" },
+      "product_name": {
+        "type": "text",
+        "analyzer": "nori_analyzer",
+        "fielddata": true  // fielddata 활성화
+      },
+      "category": {
+        "type": "text",
+        "analyzer": "nori_analyzer",
+        "fielddata": true
+      },
+      "sub_category": {
+        "type": "text",
+        "analyzer": "nori_analyzer",
+        "fielddata": true
+      },
+      "top_category": {
+        "type": "text",
+        "analyzer": "nori_analyzer",
+        "fielddata": true
+      },
+      "price": { "type": "long" },
+      "brand": { "type": "keyword" },
+      "updated_at": { "type": "date" }
+    }
+  }
+}
+```
+
+
+이 후 nori를 사용하기 위한 새로운 인덱스를 생성한다. 기존에 생성된 인덱스를 수정하는 것이 불가능 하기 때문에 새로운 인덱스를 생성하고 기존 인덱스의 데이터를 이관하는 작업을 진행했다.
+
+
+```
+POST /_reindex
+{
+  "source": {
+    "index": "musinsa"
+  },
+  "dest": {
+    "index": "musinsa_with_nori"
+  }
+}
+```
+
+
+재인덱싱 과정 이후 aggregation function을 통해 search를 진행하게 되면 형태소 분석을 통한 파싱이 진행된다.
+
+
+```
+GET /musinsa_with_nori/_search
+{
+  "size": 0,
+  "aggs": {
+    "product_name_count": {
+      "terms": {
+        "field": "product_name",
+        "size": 10
+      }
+    }
+  }
+}
+```
+
+
+
+
+- 결과 화면 비교
+
+
+기존의 aggregation function을 통한 count를 진행하게 되면 product_name의 전체 value를 기준으로 count 되는 모습을 보여주었다.
+
+
+![image](https://github.com/user-attachments/assets/2fe5532c-f622-4977-a5f4-149054f6efce)
+<br><br>
+
+
+그러나 field에 nori 사용을 위한 analyze를 추가한 뒤 aggregation function을 사용하면 형태소 별 분리가 된 결과를 볼 수 있다.
+
+
+![image](https://github.com/user-attachments/assets/047958a7-bf11-47cc-b810-6bcd9f07122d)
+<br><br>
+
+
+이 때 "후드 집업" 이라는 단어가 "후드", "집", "업"으로 분리되는 것을 확인할 수 있다.
+
+
+이는 nori analyze에서 제공하는 복합어 처리 과정에서 단어가 분리되는 것이다. 그러나 이런 형태로 데이터 분석을 진행하게 된다면 정확한 분석이 불가능할 것이라 생각했다.
+
 
 
 
@@ -439,3 +670,6 @@ POST /musinsa/_search
 set global max_connect_errors = 10000;
 set global max_connections=300;
 ```
+
+
+### Elastic Search의 text와 keyword
