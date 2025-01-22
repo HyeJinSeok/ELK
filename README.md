@@ -315,26 +315,32 @@ filter{
 
 <br>
 
-무신사에서 "후드"를 검색하게 되면 후드 집업이 아닌 후드티 상품이 상위 데이터로 검색되는 화면을 볼 수 있다.
 
+<details>
+  <summary>무신사에서 "후드"를 검색하게 되면 후드 집업이 아닌 후드티 상품이 상위 데이터로 검색되는 화면을 볼 수 있다.</summary>
+  <p align="center">
+    <img src="https://github.com/user-attachments/assets/edbaf461-23d6-4621-a513-47c4ac83d638">
+  </p>
+</details>
 
-![image](https://github.com/user-attachments/assets/edbaf461-23d6-4621-a513-47c4ac83d638)
+<details>
+  <summary>이에 반해 "후드 집업"을 검색하게 되면 결과 화면에는 후드티가 아닌 후드 집업 상품이 상위 데이터로 나타난다.</summary>
+  <p align="center">
+    <img src="https://github.com/user-attachments/assets/da52d143-ed2e-4ac0-901a-2ca062e8139a">
+  </p>
+</details>
 
-
-이에 반해 "후드 집업"을 검색하게 되면 결과 화면에는 후드티가 아닌 후드 집업 상품이 상위 데이터로 나타난다.<br>
-그러나 "후드 집업" 혹은 "후드"를 검색하면 무조건 해당 제품만 검색되는 것은 아니다.<br>
-
-
-![image](https://github.com/user-attachments/assets/da52d143-ed2e-4ac0-901a-2ca062e8139a)
-
-
+그러나 "후드 집업" 혹은 "후드"를 검색하면 무조건 해당 제품만 검색되는 것은 아니다.
 해당 결과 화면에서는 후드 집업을 검색한 결과 중 상위 데이터의 일부는 후드 집업과 관련이 없는 상품이 존재하는 것을 볼 수 있다.
 
+<details>
+  <summary>또한 후드를 검색했을 때 모자가 달린 패딩과 같은 관련성이 적은 아우터가 검색 결과에 포함된 것을 볼 수 있다.</summary>
+  <p align="center">
+    <img src="https://github.com/user-attachments/assets/2347fec6-ed6f-4edb-b045-54d90b25b0b0">
+  </p>
+</details>
 
-![image](https://github.com/user-attachments/assets/2347fec6-ed6f-4edb-b045-54d90b25b0b0)
-
-
-또한 후드를 검색했을 때 모자가 달린 패딩과 같은 관련성이 적은 아우터가 검색 결과에 포함된 것을 볼 수 있다.<br>
+<br>
 이는 검색 엔진에서 단순히 키워드를 통한 결과를 반환하는 것이 아님을 알 수 있다.
 
 
