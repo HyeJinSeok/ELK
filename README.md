@@ -8,26 +8,155 @@
 |:-:|:-:|:-:|:-:|
 |김리영 (Kim Ri-yeong)<br/>[@riyeong0916](https://github.com/riyeong0916)|Ryan Na<br/>[@CooolRyan](https://github.com/CooolRyan)|Park ji hye<br/>[@parkjhhh](https://github.com/parkjhhh)|[@HyeJinSeok](https://github.com/HyeJinSeok)|
 
+<br>
 
 ## 프로젝트 소개
 
 
-실제 elastic search가 활용되는 분야를 고민하던 중 로그 수집과 분석, 추천 알고리즘을 떠올릴 수 있었다.<br>
-그 중 고객 데이터를 활용해  
+실제 ElasticSearch가 활용되는 분야를 고민하던 중  ▲로그 수집과 분석 ▲추천 알고리즘을 떠올릴 수 있었다. <br>
+그 중 고객 데이터를 활용해 **상품 구매 내역을 분석 및 검색하여 더 나은 추천 알고리즘을 구현**하는 방안을 모색했다. <br>
+<br>
+나아가, 분석 결과를 보다 직관적으로 이해하고 활용하기 위해 Kibana를 사용하여 **데이터를 시각화**했으며 <br>
+ 고객 구매 패턴과 추천 알고리즘 성능을 한눈에 파악할 수 있도록 대시보드를 구성했다.
 
+<br>
 
 ![image](https://github.com/user-attachments/assets/ac8ca101-4d65-46db-9713-7ea7cdf3d126)
 
 
-무신사에서는 일부 크롤링을 허용해주는 것을 robots.txt를 통해 확인할 수 있었다. 직접 크롤링하는데 시간이 걸리기 때문에 [해시스크래퍼](https://www.hashscraper.com/) 사이트에서 제공하는 무료 크롤링 기능을 활용해 상품 데이터를 추출해와서 활용했다.<br>
-크롤링한 데이터를 기반으로 주문자 정보 더미 데이터를 만드는 과정을 ChatGPT를 통해 진행했다.
+온라인 커머스 플랫폼인 **'무신사'** 에서는 크롤링을 일부 허용해주는 것을 robots.txt를 통해 확인할 수 있었다. <br>
+상품 데이터를 직접 크롤링하는 데 많은 시간이 소요되는 관계로, [해시스크래퍼](https://www.hashscraper.com/) 사이트의 무료 크롤링 기능을 활용했다. <br>
+또한 테이블 스키마를 구성하기 위해 [Amazon Seller - Order Status Prediction](https://www.kaggle.com/datasets/pranalibose/amazon-seller-order-status-prediction) 데이터셋을 참고했다. <br>
 
+<br>
+
+<details>
+  <summary>해시스크래퍼로 크롤링한 무신사 상품 테이블</summary>
+  <br>
+  <table>
+    <thead>
+      <tr style="background-color: #f2f2f2;">
+        <th>카테고리</th>
+        <th>정렬기준</th>
+        <th>상품명</th>
+        <th>브랜드</th>
+        <th>품번</th>
+        <th>판매가</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>아우터 > 후드 집업(인터크루)</td>
+        <td>무신사 추천순</td>
+        <td>[23FW] 우먼스 융기모 세미크롭 후드집업 비바마젠타 ITX4DH54AVM</td>
+        <td>인터크루</td>
+        <td>5007029826</td>
+        <td>69,900</td>
+      </tr>
+      <tr>
+        <td>아우터 > 후드 집업(아임낫어휴먼비잉)</td>
+        <td>무신사 추천순</td>
+        <td>Basic Logo Zip-up Hoodie - ROYAL BLUE</td>
+        <td>아임낫어휴먼비잉</td>
+        <td>hbre206</td>
+        <td>69,000</td>
+      </tr>
+    </tbody>
+  </table>
+</details>
+<br>
+<details>
+  <summary>Amazon Seller 테이블</summary>
+  <br>
+  <table>
+    <thead>
+      <tr style="background-color: #f2f2f2; color: #333;">
+        <th>Order No</th>
+        <th>Order Date</th>
+        <th>Buyer</th>
+        <th>Ship City</th>
+        <th>Ship State</th>
+        <th>SKU</th>
+        <th>Description</th>
+        <th>Quantity</th>
+        <th>Item Total</th>
+        <th>Shipping Fee</th>
+        <th>COD</th>
+        <th>Order Status</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>405-9763961-5211537</td>
+        <td>Sun, 18 Jul, 2021, 10:38 pm IST</td>
+        <td>Mr.</td>
+        <td>CHANDIGARH</td>
+        <td>CHANDIGARH</td>
+        <td>2X-3C0F-KNJE</td>
+        <td>100% Leather Elephant Shaped Piggy Coin Bank | Block Printed West Bengal Handicrafts (Shantiniketan Art) | Money Bank for Kids | Children's Gift Ideas</td>
+        <td>1</td>
+        <td>₹449.00</td>
+        <td></td>
+        <td></td>
+        <td>Delivered to buyer</td>
+      </tr>
+      <tr>
+        <td>404-3964908-7850720</td>
+        <td>Tue, 19 Oct, 2021, 6:05 pm IST</td>
+        <td>Minam</td>
+        <td>PASIGHAT</td>
+        <td>ARUNACHAL PRADESH</td>
+        <td>DN-0WDX-VYOT</td>
+        <td>Women's Set of 5 Multicolor Pure Leather Single Lipstick Cases with Mirror, Handy and Compact Handcrafted Shantiniketan Block Printed Jewelry Boxes</td>
+        <td>1</td>
+        <td>₹449.00</td>
+        <td>₹60.18</td>
+        <td></td>
+        <td>Delivered to buyer</td>
+      </tr>
+    </tbody>
+  </table>
+</details>
+<br>
+
+<br>
+
+위와 같은 테이블 스키마를 프로젝트 목적에 맞게 **전처리**하고, ChatGPT를 활용해 주문자 정보 **더미 데이터**를 만드는 과정을 진행했다.
+
+```
+#고객 주문을 관리하는 테이블 customerorder 정의
+
+create table customerorder(
+	order_no int primary key,
+	order_date datetime,
+	buyer varchar(10),
+	gender ENUM('남성', '여성'),
+	address varchar(50),
+	category varchar(50),
+	brand varchar(30),
+	product_name varchar(100),
+	price bigint,
+	order_status ENUM('구매확정', '환불', '교환', '배송준비중'),
+	updated_at TIMESTAMP default CURRENT_TIMESTAMP
+);
+```
+<br>
+
+< customerorder 테이블 예시 >
+
+![alt text](table.png)
+
+<br>
+
+---
+
+<br>
 
 ### 1. 데이터 파이프라인 구축 
 MySQL 데이터베이스에서 데이터를 추출하여 Logstash를 통해 Elasticsearch로 전송하는 데이터 파이프라인을 구축하는 방법을 실습함
 <br>
 
-![image](https://github.com/user-attachments/assets/cfb9084e-3dfe-416e-8784-711cefbd065f)
+![alt text](relation1.png)
 
 
 ### 2. 데이터 처리
