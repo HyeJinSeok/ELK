@@ -25,7 +25,7 @@
 
 
 온라인 커머스 플랫폼인 **'무신사'** 에서는 크롤링을 일부 허용해주는 것을 robots.txt를 통해 확인할 수 있었다. <br>
-상품 데이터를 직접 크롤링하는 데 많은 시간이 소요되는 관계로, [해시스크래퍼](https://www.hashscraper.com/) 사이트의 무료 크롤링 기능을 활용했다. <br>
+상품 데이터를 직접 크롤링하는 데 많은 시간이 소요되는 관계로, [해시스크래퍼](https://www.hashscraper.com/)의 무료 크롤링 기능을 활용했다. <br>
 또한 테이블 스키마를 구성하기 위해 [Amazon Seller - Order Status Prediction](https://www.kaggle.com/datasets/pranalibose/amazon-seller-order-status-prediction) 데이터셋을 참고했다. <br>
 
 <br>
@@ -64,7 +64,6 @@
     </tbody>
   </table>
 </details>
-<br>
 <details>
   <summary>Amazon Seller 테이블</summary>
   <br>
@@ -119,7 +118,6 @@
 </details>
 <br>
 
-<br>
 
 위와 같은 테이블 스키마를 프로젝트 목적에 맞게 **전처리**하고, ChatGPT를 활용해 주문자 정보 **더미 데이터**를 만드는 과정을 진행했다.
 
