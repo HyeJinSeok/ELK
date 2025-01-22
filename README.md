@@ -21,7 +21,7 @@
 
 <br>
 
-![alt text](image1.png)
+![alt text](/images/image1.png)
 
 
 온라인 커머스 플랫폼인 **'무신사'** 에서는 크롤링을 일부 허용해주는 것을 robots.txt를 통해 확인할 수 있었다. <br>
@@ -142,7 +142,7 @@ create table customerorder(
 
 < customerorder 테이블 예시 >
 
-![alt text](table.png)
+![alt text](/images/table.png)
 
 <br>
 
@@ -154,7 +154,7 @@ create table customerorder(
 MySQL 데이터베이스에서 데이터를 추출하여 Logstash를 통해 Elasticsearch로 전송하는 데이터 파이프라인을 구축하는 방법을 실습함
 <br>
 
-![alt text](relation1.png)
+![alt text](/images/relation1.png)
 
 
 ### 2. 데이터 처리
@@ -162,7 +162,7 @@ MySQL 데이터베이스에서 데이터를 추출하여 Logstash를 통해 Elas
 DB의 테이블 데이터를 수집, 변환, 필터링하고 Elasticsearch에 적합하게 저장함
 <br>
 
-![image](https://github.com/user-attachments/assets/3c889787-f50e-4981-ba3a-3bf68abe4c28)
+<img src="https://github.com/user-attachments/assets/3c889787-f50e-4981-ba3a-3bf68abe4c28" width="300px" />
 
 
 ### 3. Elasticsearch 활용
@@ -170,7 +170,7 @@ DB의 테이블 데이터를 수집, 변환, 필터링하고 Elasticsearch에 �
 Elasticsearch를 활용해 빠른 검색과 분석을 수행하며, 특히 Kibana를 이용한 데이터 시각화로 분석 효율성을 극대화함.
 <br>
 
-![image](https://github.com/user-attachments/assets/b8a56d4a-615c-482e-9e9e-9270f546285c)
+<img src="images/image3.png" alt="alt text" width="300px" />
 
 <br>
 
