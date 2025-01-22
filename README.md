@@ -19,6 +19,11 @@ tracking_column => "order_no"
 tracking_column_type => "numeric"
 last_run_metadata_path => "C:\\00.dataSet\\logstash_jdbc_last_run"
 schedule => "*/5 * * * * *"  # 5초마다 실행
+```
 
+가장 마지막 order_no 내용만 업데이트 되고 있음을 확인.
+<br>
+
+![트러블슈팅-after](https://github.com/user-attachments/assets/a7f799ee-6ea8-47cc-af2a-7773d0c1912f)
 
 
