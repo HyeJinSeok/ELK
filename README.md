@@ -1,148 +1,24 @@
-# ELK는 무진장 무신사랑해💟
+# ELK를 활용한 쇼핑몰 데이터 분석 및 검색 최적화
 
+<br>
 
-## 팀원 소개
+ELK 스택을 활용해 온라인 쇼핑몰(MUSINSA)의 주문 데이터를 처리하고 **검색 품질을 개선**하는 과정을 구현했습니다. <br>
 
+저희는 ElasticSearch의 대표적인 활용 분야 중 ▲데이터 수집 및 분석과 ▲추천 알고리즘 개선에 주목했습니다. <br>
+
+이를 기반으로 고객 구매 내역 데이터를 분석하고 **검색 알고리즘을 최적화**하는 방법을 탐구했습니다. <br>
+
+또한 Kibana를 통해 고객 구매 패턴, 매출 현황, 브랜드별 인기도 등을 직관적으로 파악할 수 있는 **시각화 대시보드**를 구축했습니다. <br>
+
+<br>
+
+## ◈ 팀원 소개
+
+<br>
 
 |<img src="https://avatars.githubusercontent.com/u/193798531?v=4" width="150" height="150"/>|<img src="https://avatars.githubusercontent.com/u/74342019?v=4" width="150" height="150"/>|<img src="https://avatars.githubusercontent.com/u/153366521?v=4" width="150" height="150"/>|<img src="https://avatars.githubusercontent.com/u/127267532?v=4" width="150" height="150"/>|
 |:-:|:-:|:-:|:-:|
-|김리영 (Kim Ri-yeong)<br/>[@riyeong0916](https://github.com/riyeong0916)|Ryan Na<br/>[@CooolRyan](https://github.com/CooolRyan)|Park ji hye<br/>[@parkjhhh](https://github.com/parkjhhh)|[@HyeJinSeok](https://github.com/HyeJinSeok)|
-
-<br>
-
-## 프로젝트 소개
-
-
-실제 ElasticSearch가 활용되는 분야를 고민하던 중  △로그 수집과 분석 △추천 알고리즘을 떠올릴 수 있었다. <br>
-그 중 고객 데이터를 활용해 **상품 구매 내역 분석 및 검색 알고리즘을 구현 방식을 탐구**하는 방안을 모색했다. <br>
-<br>
-나아가, 분석 결과를 보다 직관적으로 이해하고 활용하기 위해 Kibana를 사용하여 **데이터를 시각화**했으며 <br>
-고객 구매 패턴과 추천 알고리즘 성능을 한눈에 파악할 수 있도록 대시보드를 구성했다.
-
-<br>
-
-![alt text](/images/image1.png)
-
-
-온라인 커머스 플랫폼인 **'무신사'** 에서는 크롤링을 일부 허용해주는 것을 robots.txt를 통해 확인할 수 있었다. <br>
-상품 데이터를 직접 크롤링하는 데 많은 시간이 소요되는 관계로, [해시스크래퍼](https://www.hashscraper.com/)의 무료 크롤링 기능을 활용했다. <br>
-또한 테이블 스키마를 구성하기 위해 [Amazon Seller - Order Status Prediction](https://www.kaggle.com/datasets/pranalibose/amazon-seller-order-status-prediction) 데이터셋을 참고했다. <br>
-
-<br>
-
-<details>
-  <summary>해시스크래퍼로 크롤링한 무신사 상품 테이블</summary>
-  <br>
-  <table>
-    <thead>
-      <tr style="background-color: #f2f2f2;">
-        <th>카테고리</th>
-        <th>정렬기준</th>
-        <th>상품명</th>
-        <th>브랜드</th>
-        <th>품번</th>
-        <th>판매가</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr>
-        <td>아우터 > 후드 집업(인터크루)</td>
-        <td>무신사 추천순</td>
-        <td>[23FW] 우먼스 융기모 세미크롭 후드집업 비바마젠타 ITX4DH54AVM</td>
-        <td>인터크루</td>
-        <td>5007029826</td>
-        <td>69,900</td>
-      </tr>
-      <tr>
-        <td>아우터 > 후드 집업(아임낫어휴먼비잉)</td>
-        <td>무신사 추천순</td>
-        <td>Basic Logo Zip-up Hoodie - ROYAL BLUE</td>
-        <td>아임낫어휴먼비잉</td>
-        <td>hbre206</td>
-        <td>69,000</td>
-      </tr>
-    </tbody>
-  </table>
-</details>
-<details>
-  <summary>Amazon Seller 테이블</summary>
-  <br>
-  <table>
-    <thead>
-      <tr style="background-color: #f2f2f2; color: #333;">
-        <th>Order No</th>
-        <th>Order Date</th>
-        <th>Buyer</th>
-        <th>Ship City</th>
-        <th>Ship State</th>
-        <th>SKU</th>
-        <th>Description</th>
-        <th>Quantity</th>
-        <th>Item Total</th>
-        <th>Shipping Fee</th>
-        <th>COD</th>
-        <th>Order Status</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr>
-        <td>405-9763961-5211537</td>
-        <td>Sun, 18 Jul, 2021, 10:38 pm IST</td>
-        <td>Mr.</td>
-        <td>CHANDIGARH</td>
-        <td>CHANDIGARH</td>
-        <td>2X-3C0F-KNJE</td>
-        <td>100% Leather Elephant Shaped Piggy Coin Bank | Block Printed West Bengal Handicrafts (Shantiniketan Art) | Money Bank for Kids | Children's Gift Ideas</td>
-        <td>1</td>
-        <td>₹449.00</td>
-        <td></td>
-        <td></td>
-        <td>Delivered to buyer</td>
-      </tr>
-      <tr>
-        <td>404-3964908-7850720</td>
-        <td>Tue, 19 Oct, 2021, 6:05 pm IST</td>
-        <td>Minam</td>
-        <td>PASIGHAT</td>
-        <td>ARUNACHAL PRADESH</td>
-        <td>DN-0WDX-VYOT</td>
-        <td>Women's Set of 5 Multicolor Pure Leather Single Lipstick Cases with Mirror, Handy and Compact Handcrafted Shantiniketan Block Printed Jewelry Boxes</td>
-        <td>1</td>
-        <td>₹449.00</td>
-        <td>₹60.18</td>
-        <td></td>
-        <td>Delivered to buyer</td>
-      </tr>
-    </tbody>
-  </table>
-</details>
-<br>
-
-
-위와 같은 테이블 스키마를 프로젝트 목적에 맞게 **전처리**하고, ChatGPT를 활용해 주문자 정보 **더미 데이터**를 만드는 과정을 진행했다.
-
-```
-#고객 주문을 관리하는 테이블 customerorder 정의
-
-create table customerorder(
-	order_no int primary key,
-	order_date datetime,
-	buyer varchar(10),
-	gender ENUM('남성', '여성'),
-	address varchar(50),
-	category varchar(50),
-	brand varchar(30),
-	product_name varchar(100),
-	price bigint,
-	order_status ENUM('구매확정', '환불', '교환', '배송준비중'),
-	updated_at TIMESTAMP default CURRENT_TIMESTAMP
-);
-```
-<br>
-
-< customerorder 테이블 예시 >
-
-![alt text](/images/table.png)
+|[@riyeong0916](https://github.com/riyeong0916)|[@CooolRyan](https://github.com/CooolRyan)|[@parkjhhh](https://github.com/parkjhhh)|[@HyeJinSeok](https://github.com/HyeJinSeok)|
 
 <br>
 
@@ -150,119 +26,207 @@ create table customerorder(
 
 <br>
 
-### 1. 데이터 파이프라인 구축 
-MySQL 데이터베이스에서 데이터를 추출하여 Logstash를 통해 Elasticsearch로 전송하는 데이터 파이프라인을 구축하는 방법을 실습했다.
-<br>
-
-![alt text](/images/relation1.png)
-
-
-### 2. 데이터 처리
-
-DB의 테이블 데이터를 수집, 변환, 필터링하고 Elasticsearch에 적합하게 저장했다.
-<br>
-
-<img src="https://github.com/user-attachments/assets/3c889787-f50e-4981-ba3a-3bf68abe4c28" width="300px" />
-
-
-### 3. Elasticsearch 활용
-
-Elasticsearch를 활용해 빠른 검색과 분석을 수행하며, 특히 Kibana를 이용한 데이터 시각화로 분석 효율성을 극대화했다.
-<br>
-
-<img src="images/image3.png" alt="alt text" width="300px" />
+## 1. 데이터 수집 및 전처리
 
 <br>
 
+• 온라인 커머스 플랫폼 '무신사(MUSINSA)'는 robots.txt를 통해 일부 크롤링을 허용하고 있음 <br>
+
+• 상품 데이터를 직접 크롤링하는 데 시간이 많이 소요되므로 [해시스크래퍼](https://www.hashscraper.com/)의 무료 크롤링 기능을 활용함 <br>
+
+• 테이블 스키마 설계를 위해 Kaggle의 [Amazon Seller - Order Status Prediction](https://www.kaggle.com/datasets/pranalibose/amazon-seller-order-status-prediction) 데이터셋을 참고함 <br>
+
+• 프로젝트 목적에 맞게 데이터를 전처리하고 ChatGPT로 **주문자 더미 데이터**를 생성함 <br>
+
+<br><br>
+
+### 📌해시스크래퍼로 크롤링한 무신사 상품 테이블
+
+
+<table>
+  <tr>
+    <td>카테고리</td>
+    <td>정렬기준</td>
+    <td>상품명</td>
+    <td>브랜드</td>
+    <td>품번</td>
+    <td>판매가</td>
+  </tr>
+  <tr>
+    <td>아우터 > 후드 집업(인터크루)</td>
+    <td>무신사 추천순</td>
+    <td>[23FW] 우먼스 융기모 세미크롭 후드집업 비바마젠타 ITX4DH54AVM</td>
+    <td>인터크루</td>
+    <td>5007029826</td>
+    <td>69,900</td>
+  </tr>
+  <tr>
+    <td>아우터 > 후드 집업(아임낫어휴먼비잉)</td>
+    <td>무신사 추천순</td>
+    <td>Basic Logo Zip-up Hoodie - ROYAL BLUE</td>
+    <td>아임낫어휴먼비잉</td>
+    <td>hbre206</td>
+    <td>69,000</td>
+  </tr>
+</table>
+
 <br>
 
-## JDBC를 통한 Logstash와 Elastic Search 연동
+### 📌Amazon Seller 스키마
 
+
+<table>
+  <tr>
+    <td>Order No</td>
+    <td>Order Date</td>
+    <td>Buyer</td>
+    <td>Ship City</td>
+    <td>Ship State</td>
+    <td>SKU</td>
+    <td>Description</td>
+    <td>Quantity</td>
+    <td>Item Total</td>
+    <td>Shipping Fee</td>
+    <td>COD</td>
+    <td>Order Status</td>
+  </tr>
+</table>
+
+<br>
+
+### 📌고객 주문을 관리하는 customer_order 테이블 정의
+
+```
+CREATE TABLE customer_order (
+
+  order_no      INT PRIMARY KEY,
+  order_date    DATETIME,
+  buyer         VARCHAR(10),
+  gender        ENUM('남성', '여성'),
+  address       VARCHAR(50),
+  category      VARCHAR(50),
+  brand         VARCHAR(30),
+  product_name  VARCHAR(100),
+  price         BIGINT,
+  order_status  ENUM('구매확정', '환불', '교환', '배송준비중'),
+  updated_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+
+);
+```
+
+<br>
+
+### 📌customer_order 테이블 예시
+
+![alt text](/images/table.png)
+
+<br><br>
+
+---
+
+<br>
+
+## 2. Logstash: Data Ingestion
+
+<br>
+
+• Logstash의 파이프라인은 **input → filter → output** 구조임 (.conf 파일)
+
+• **원천 DB**에서 데이터를 주기적으로 끌어와, 필드를 전처리한 뒤 Elasticsearch에 **문서로 색인**하는 과정 <br>
+
+> − Input 단계 : 원천 MySQL에서 데이터 끌어옴 (JDBC) <br>
+> − Filter 단계 : 끌어온 데이터를 전처리 및 가공 <br>
+> − Output 단계 : Elasticsearch에 색인 <br>
+
+<br>
+
+### ① JDBC 입력 설정
+
+
+− 원격 MySQL에서 customer_order 테이블을 읽어오도록 **input { jdbc { ... } }** 구성함 <br>
+
+− 연결 정보 및 드라이버를 지정함 <br>
+
+− **:sql_last_value** 기준으로 신규/변경분만 가져오도록 구성함 <br>
 
 ```
 input {
+
   jdbc {
-    jdbc_driver_library => "D:/woorifisa/05.ELK/logstash-7.11.1-windows-x86_64/logstash-7.11.1/logstash-core/lib/jars/mysql-connector-j-9.1.0.jar"
-    jdbc_driver_class => "com.mysql.cj.jdbc.Driver"
+    jdbc_driver_library => "D:/woorifisa/.../mysql-connector-j-9.1.0.jar"
+    jdbc_driver_class   => "com.mysql.cj.jdbc.Driver"
     jdbc_connection_string => "jdbc:mysql://localhost:8888/musinsa?useSSL=false&characterEncoding=utf8&serverTimezone=Asia/Seoul"
     jdbc_user => "user01"
     jdbc_password => "user01"
-    statement => "SELECT * FROM `customerorder` WHERE updated_at > :sql_last_value"
-    schedule => "*/5 * * * * *"  # 5초마다 실행
+    statement  => "SELECT * FROM customer_order WHERE updated_at > :sql_last_value"
+    schedule   => "*/5 * * * * *"   # 5초 주기
   }
+
 }
 ```
 
-
-원격 데이터베이스를 사용했으며 해당 데이터에 접근하기 위해 이전 프로젝트와 동일한 방식의 포워딩을 설정했다.
-
-
-이 때 데이터베이스에서 정보를 가져와 Elastic Search로 전달하는 과정을 1초 단위로 진행했으며 :sql_last_value를 통해 전체 값을 insert하는 것이 아닌 Elastic Search에 존재하지 않는 데이터에 한해서만 insert 할 수 있도록 진행했다.
-
-
-schedule의 경우 빠른 실행 결과를 확인하기 위해 5초 단위로 설정했다.
-
 <br>
 
-##  데이터 필터링 
+### ② 데이터 필터링 
 
+
+− **category**를 > 기준으로 분해해 top_category, sub_category 생성함 <br>
+
+− **address**를 공백 기준으로 분해해 city, state 추출함 <br>
+
+− **order_date**에서 날짜/시간을 분리 저장함 <br>
 
 ![image](https://github.com/user-attachments/assets/43487d17-d2c1-4afd-8050-f88eaf3e48a6)![image](https://github.com/user-attachments/assets/f80c44cd-c2c1-4f73-989b-c7c9abeffb95)
-
+![image](https://github.com/user-attachments/assets/9967ac39-d6ae-46f8-8555-ee0efa7ef456)
 
 ```
 filter {
-  # category 필드를 > 기호로 분리
-  mutate {
-    split => { "category" => ">" }
-  }
-  # 상의 카테고리와 하의 카테고리로 매핑
+
+  # 카테고리 분해 및 매핑
+  mutate { split => { "category" => ">" } }
   mutate {
     add_field => {
       "top_category" => "%{[category][0]}"
       "sub_category" => "%{[category][1]}"
     }
   }
-  # address 필드를 띄어쓰기로 분리
   mutate {
-    split => { "address" => " " }
+    strip => ["top_category","sub_category"]
+    gsub  => [
+      "top_category", "^\s+|\s+$", "",
+      "sub_category", "^\s+|\s+$", ""
+    ]
   }
-  # city와 state를 분리하는 Ruby 스크립트
+```
+
+<details>
+  <summary>filter 코드 이어서 보기</summary>
+  
+<br>
+
+```conf
+  # 주소 파싱
+  mutate { split => { "address" => " " } }
   ruby {
     code => '
-      if event.get("address")
-        parts = event.get("address")
-        if parts.length >= 2
-          event.set("city", parts[0])
-          event.set("state", parts[1])
-        end
+      parts = event.get("address")
+      if parts && parts.length >= 2
+        event.set("city",  parts[0])
+        event.set("state", parts[1])
       end
     '
   }
-}
-```
-<br>
 
-
-데이터 가공을 위해 먼저 카테고리 필터링과 주문자 주소 정보 필터링을 진행했다.
-
-
-![image](https://github.com/user-attachments/assets/9967ac39-d6ae-46f8-8555-ee0efa7ef456)
-
-<br>
-
-```
-filter{
-  # order_date 필드를 날짜(date)와 시간(time)으로 분리
+  # 주문일시 분해
   ruby {
     code => '
       if event.get("order_date")
-        order_date = event.get("order_date").to_s
-        if order_date.include?("T")
-          date_time = order_date.split("T")
-          if date_time.length == 2
-            event.set("date", date_time[0])  # 날짜 부분
-            event.set("time", date_time[1].gsub("Z", ""))  # 시간 부분 (Z 제거)
+        ts = event.get("order_date").to_s
+        if ts.include?("T")
+          d, t = ts.split("T", 2)
+          if t
+            event.set("date", d)
+            event.set("time", t.gsub("Z",""))
           else
             event.tag("_order_date_split_failed")
           end
@@ -276,64 +240,197 @@ filter{
   }
 }
 ```
+</details>
 
 <br>
 
-## Kibana를 통한 시각화
-- 상품 구매 내역 데이터를 기반으로 **△일별 주문 건수 및 매출 △2025년 주문 현황 △2025년 일일 매출 △우수회원 △브랜드별 성별 인기도** 를 시각화하여 모니터링 대시보드 구축
-<p align="center">
-    <img src="https://github.com/user-attachments/assets/5a1ff338-a490-4629-bc60-a852345b00ce" alt="Image" style="width:90%;">
-</p>
+### ③ Elasticsearch 색인
 
-1. 일별 주문 건수 및 매출
-<p align="center">
-    <img src="https://github.com/user-attachments/assets/d3c8c4cf-cb32-4866-98fa-741a416e1267" alt="Image" style="width:70%;">
-</p>
 
-2. 2025년 주문 현황 
-<p align="center">
-    <img src="https://github.com/user-attachments/assets/cdae1158-01dc-4726-b1ab-b7cfabe91b13" alt="Image" style="width:50%;">
-</p>
+− 전처리된 이벤트를 Elasticsearch **인덱스 musinsa**로 색인함 <br>
 
-3. 2025년 일일 매출
-<p align="center">
-    <img src="https://github.com/user-attachments/assets/69eb93f4-70f8-4a1a-8573-0a09876221b6" alt="Image" style="width:50%;">
-</p>
+− 중복 방지를 위해 **document_id = order_no**로 고정해 idempotent하게 갱신되도록 함
 
-4. 우수회원
-<p align="center">
-    <img src="https://github.com/user-attachments/assets/243ff5c7-ea8d-450b-9b1a-4c70020680c2" alt="Image" style="width:50%;">
-</p>
+```
+output {
 
-5. 브랜드별 성별 인기도
-<p align="center">
-    <img src="https://github.com/user-attachments/assets/cdee7b43-a5fc-4f04-8810-8c6d3237b87b" alt="Image" style="width:50%;">
-</p>
+  elasticsearch {
+    hosts       => ["http://localhost:9200"]
+    index       => "musinsa"
+    document_id => "%{order_no}"
+    action      => "index"
+  }
+  stdout { codec => rubydebug }
+
+}
+```
+
+<br><br>
+
+---
 
 <br>
 
-## 무신사 검색 정렬 알고리즘 톺아보기
+## 3. Kibana를 통한 시각화
 
-
-- 무신사의 검색 알고리즘의 문제점 <br>
-
-
-![image](https://github.com/user-attachments/assets/34fb0a63-4553-470c-b2fd-c3f6f3274560)
 <br>
 
+• 상품 구매 내역 데이터를 기반으로 모니터링 대시보드를 구축함 <br>
 
-- 적합도 반영 전략
+• Kibana에서 **musinsa 인덱스**를 연결해 Lens로 그래프를 만듦 <br>
+
+<br>
+
+### < 일별 주문 건수 및 매출 >
+
+<img src="https://github.com/user-attachments/assets/d3c8c4cf-cb32-4866-98fa-741a416e1267" alt="Image" style="width:70%;">
+
+<br>
+
+### < 2025년 주문 현황 >
+
+<img src="https://github.com/user-attachments/assets/cdae1158-01dc-4726-b1ab-b7cfabe91b13" alt="Image" style="width:50%;">
+
+<br>
+
+### < 2025년 일일 매출 >
+
+<img src="https://github.com/user-attachments/assets/69eb93f4-70f8-4a1a-8573-0a09876221b6" alt="Image" style="width:50%;">
+
+<br>
+
+### < 우수회원 >
+
+<img src="https://github.com/user-attachments/assets/243ff5c7-ea8d-450b-9b1a-4c70020680c2" alt="Image" style="width:50%;">
+
+<br>
+
+### < 브랜드별 성별 인기도 >
+
+<img src="https://github.com/user-attachments/assets/cdee7b43-a5fc-4f04-8810-8c6d3237b87b" alt="Image" style="width:50%;">
+
+<br><br>
+
+---
+
+<br>
+
+## 4. 기존 검색 알고리즘의 문제점
+
+<br>
+
+• 무신사 사이트는 **키워드 기반(Best Match 25) 검색 + 동의어 사전** 조합으로 매칭을 수행함 <br>
+
+• 그러나 이는 카테고리 및 의도 신호 부재로, **텍스트 일치도만 높은 결과**가 의도와 무관하게 상위로 노출될 가능성이 있음 <br>
+
+• 예) ‘삭스’가 들어간 **부츠 카테고리 상품** (=삭스 부츠)도 양말 질의와 텍스트 일치도가 높아져 **상단에 노출**되는 상황 <br>
+
+<img src="https://github.com/user-attachments/assets/34fb0a63-4553-470c-b2fd-c3f6f3274560" alt="검색 문제 도해" width="600">
+
+<br>
+
+> [!NOTE]
+> #### - 문제점 관찰 방법 <br>
+> - “후드” 검색 ⇒ 후드티가 상단에 많이 노출됨 <br>
+> - “후드 집업” 검색 ⇒ 후드 집업이 상단이지만 비의도 상품이 일부 끼어듦 <br>
+> - “후드” 검색에서 후드 달린 패딩 등 관련도 낮은 아우터가 상단에 뜨는 경우가 있음 <br><br>
+> #### - 원인 분석 <br>
+> - BM25는 텍스트 일치도 중심이라 카테고리 의도를 반영하지 못함 <br>
+> -  “후드” vs “후드 집업”처럼 단어 수 및 구성이 비슷하면 BM25 점수도 비슷해 구분력 떨어짐 <br>
+> -  brand 필드는 존재하나 일관된 가중치 기준 잡기 어려워 노이즈 가능 <br><br>
+> #### - 결론 <br>
+> - 단순 키워드 점수만으론 부족하기 때문에 랭킹에서 카테고리 가중치를 최우선으로 둠 <br>
+> - “후드” 질의는 상의/후드 티셔츠 우선, “후드 집업” 질의는 아우터/후드 집업 우선으로 정렬되어야 함
+
+<br>
+
+### < ‘후드’ 질의의 Elasticsearch hits 일부 >
+
+
+![image](https://github.com/user-attachments/assets/5a36be55-484e-4436-8f1e-7234326a030b)
+
+
+− ‘후드’ 검색 시, 상품명에 ‘후드’만 있는 상품과 ‘후드 집업’이 함께 상단에 노출됨 <br>
+
+− 이때 두 결과의 랭킹 점수(_score)가 1.6701219로 거의 동일해 우선순위 구분이 어려움 <br>
+
+<br>
+
+---
+
+<br>
+
+## 5. 적합도 반영 전략
+
+
+− 필드 가중치 우선순위를 **category > product_name > brand**로 설정함 <br>
+
+− 질의어가 문구로 정확히 들어가면 구문 일치 부스트(**추가 가중치**)를 부여함 <br>
+
+− 비의도 카테고리에는 **페널티**를 적용해 점수를 낮춤 <br>
+
+− 기존의 동의어 사전 알고리즘은 유지하되, 최종 랭킹은 **카테고리 신호 중심**으로 재정렬함 <br>
 
 
 ![image](https://github.com/user-attachments/assets/52c41069-5728-433f-b088-b553cf1ccf9d)
 
 <br>
 
-### 스코어링 전략
-
+### 🎯스코어링 구현
 
 <br>
 
+**① function_score로 가중치 합산** <br>
+
+• BM25 점수는 그대로 두고 필드별 weight를 더함 (빠르고 단순) <br>
+
+```
+POST /musinsa/_search
+{
+  "query": {
+    "function_score": {
+      "query": { "match": { "product_name": "후드" } },
+      "functions": [
+        { "filter": { "term": { "top_category": "상의" } },        "weight": 3.0 },
+        { "filter": { "term": { "top_category": "아우터" } },       "weight": 0.5 },
+        { "filter": { "term": { "sub_category": "후드 티셔츠" } },   "weight": 2.0 },
+        { "filter": { "term": { "sub_category": "후드 집업" } },     "weight": 0.5 },
+        { "filter": { "match_phrase": { "product_name": "후드" } },  "weight": 1.5 },
+        { "filter": { "match_phrase": { "product_name": "후드 집업" } }, "weight": 0.5 }
+      ],
+      "score_mode": "sum",
+      "boost_mode": "sum"
+    }
+  }
+}
+```
+
+<br>
+
+**② script_score로 BM25에 직접 보정함** <br>
+
+• _score(BM25)에 가감산해서 좀 더 큰 격차를 만들 때 사용 (유연하지만 상대적으로 느림) <br>
+
+```
+POST /musinsa/_search
+{
+  "query": {
+    "script_score": {
+      "query": { "match": { "product_name": "후드" } },
+      "script": {
+        "source": """
+          double score = _score;
+          if (doc['top_category'].value == '상의')          score += 3.0;
+          else if (doc['top_category'].value == '아우터')    score += 0.5;
+          if (doc['sub_category'].value == '후드 티셔츠')     score += 2.0;
+          else if (doc['sub_category'].value == '후드 집업') score += 0.5;
+          return score;
+        """
+      }
+    }
+  }
+}
+```
 
 <details>
   <summary>무신사에서 "후드"를 검색하게 되면 후드 집업이 아닌 후드티 상품이 상위 데이터로 검색되는 화면을 볼 수 있다.</summary>
