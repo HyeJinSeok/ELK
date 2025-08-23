@@ -1,14 +1,17 @@
 # ELK를 활용한 쇼핑몰 데이터 분석 및 검색 최적화
 
 <br>
-
+  
 ELK 스택을 활용해 온라인 쇼핑몰(MUSINSA)의 주문 데이터를 처리하고 **검색 품질을 개선**하는 과정을 구현했습니다. <br>
 
 저희는 ElasticSearch의 대표적인 활용 분야 중 ▲데이터 수집 및 분석과 ▲추천 알고리즘 개선에 주목했습니다. <br>
 
 이를 기반으로 고객 구매 내역 데이터를 분석하고 **검색 알고리즘을 최적화**하는 방법을 탐구했습니다. <br>
 
-또한 Kibana를 통해 고객 구매 패턴, 매출 현황, 브랜드별 인기도 등을 직관적으로 파악할 수 있는 **시각화 대시보드**를 구축했습니다. <br>
+또한 Kibana를 통해 고객 구매 패턴, 매출 현황, 브랜드별 인기도 등을 파악할 수 있는 **시각화 대시보드**를 구축했습니다. <br><br>
+
+
+<img src="https://raw.githubusercontent.com/HyeJinSeok/ELK/main/images/elk1.png" width=700 alt="ELK 다이어그램">
 
 <br>
 
@@ -29,6 +32,9 @@ ELK 스택을 활용해 온라인 쇼핑몰(MUSINSA)의 주문 데이터를 처�
 ## 1. 데이터 수집 및 전처리
 
 <br>
+
+<img src="https://raw.githubusercontent.com/HyeJinSeok/ELK/main/images/elk2.png" width=300 alt="데이터 수집">
+
 
 • 온라인 커머스 플랫폼 '무신사(MUSINSA)'는 robots.txt를 통해 일부 크롤링을 허용하고 있음 <br>
 
@@ -87,7 +93,6 @@ ELK 스택을 활용해 온라인 쇼핑몰(MUSINSA)의 주문 데이터를 처�
     <td>Quantity</td>
     <td>Item Total</td>
     <td>Shipping Fee</td>
-    <td>COD</td>
     <td>Order Status</td>
   </tr>
 </table>
@@ -118,7 +123,7 @@ CREATE TABLE customer_order (
 
 ### 📌customer_order 테이블 예시
 
-![alt text](/images/table.png)
+<img src="https://raw.githubusercontent.com/HyeJinSeok/ELK/main/images/elk3.png" width=1000 alt="커스텀 테이블">
 
 <br><br>
 
@@ -134,9 +139,7 @@ CREATE TABLE customer_order (
 
 • **원천 DB**에서 데이터를 주기적으로 끌어와, 필드를 전처리한 뒤 Elasticsearch에 **문서로 색인**하는 과정 <br>
 
-> − Input 단계 : 원천 MySQL에서 데이터 끌어옴 (JDBC) <br>
-> − Filter 단계 : 끌어온 데이터를 전처리 및 가공 <br>
-> − Output 단계 : Elasticsearch에 색인 <br>
+<img src="https://raw.githubusercontent.com/HyeJinSeok/ELK/main/images/elk4.png" width=700 alt="Logstash pipeline">
 
 <br>
 
@@ -153,13 +156,15 @@ CREATE TABLE customer_order (
 input {
 
   jdbc {
-    jdbc_driver_library => "D:/woorifisa/.../mysql-connector-j-9.1.0.jar"
+    jdbc_driver_library => "/path/mysql-connector-j-9.1.0.jar"
     jdbc_driver_class   => "com.mysql.cj.jdbc.Driver"
-    jdbc_connection_string => "jdbc:mysql://localhost:8888/musinsa?useSSL=false&characterEncoding=utf8&serverTimezone=Asia/Seoul"
-    jdbc_user => "user01"
-    jdbc_password => "user01"
-    statement  => "SELECT * FROM customer_order WHERE updated_at > :sql_last_value"
-    schedule   => "*/5 * * * * *"   # 5초 주기
+
+    jdbc_connection_string => "jdbc:mysql://${MYSQL_HOST}:${MYSQL_PORT}/${MYSQL_DB}?${MYSQL_PARAMS}"
+    jdbc_user              => "${MYSQL_USER}"
+    jdbc_password          => "${MYSQL_PASSWORD}"
+
+    statement => "SELECT * FROM customer_order WHERE updated_at > :sql_last_value"
+    schedule  => "*/5 * * * * *"  # 5초 주기
   }
 
 }
@@ -176,8 +181,8 @@ input {
 
 • order_date에서 날짜/시간을 분리 저장함 <br>
 
-![image](https://github.com/user-attachments/assets/43487d17-d2c1-4afd-8050-f88eaf3e48a6)![image](https://github.com/user-attachments/assets/f80c44cd-c2c1-4f73-989b-c7c9abeffb95)
-![image](https://github.com/user-attachments/assets/9967ac39-d6ae-46f8-8555-ee0efa7ef456)
+<img src="https://raw.githubusercontent.com/HyeJinSeok/ELK/main/images/elk5.png" width=400 alt="tasble_schema">
+
 
 ```
 filter {
@@ -281,33 +286,34 @@ output {
 
 <br>
 
-### < 일별 주문 건수 및 매출 >
+#### < 일별 주문 건수 및 매출 >
 
-<img src="https://github.com/user-attachments/assets/d3c8c4cf-cb32-4866-98fa-741a416e1267" alt="Image" style="width:70%;">
+<img src="https://raw.githubusercontent.com/HyeJinSeok/ELK/main/images/elk6.png" width=700 alt="graph1">
 
-<br>
-
-### < 2025년 주문 현황 >
-
-<img src="https://github.com/user-attachments/assets/cdae1158-01dc-4726-b1ab-b7cfabe91b13" alt="Image" style="width:50%;">
 
 <br>
 
-### < 2025년 일일 매출 >
+#### < 2025년 주문 현황 >
 
-<img src="https://github.com/user-attachments/assets/69eb93f4-70f8-4a1a-8573-0a09876221b6" alt="Image" style="width:50%;">
-
-<br>
-
-### < 우수회원 >
-
-<img src="https://github.com/user-attachments/assets/243ff5c7-ea8d-450b-9b1a-4c70020680c2" alt="Image" style="width:50%;">
+<img src="https://raw.githubusercontent.com/HyeJinSeok/ELK/main/images/elk7.png" width=700 alt="graph2">
 
 <br>
 
-### < 브랜드별 성별 인기도 >
+#### < 2025년 일일 매출 >
 
-<img src="https://github.com/user-attachments/assets/cdee7b43-a5fc-4f04-8810-8c6d3237b87b" alt="Image" style="width:50%;">
+<img src="https://raw.githubusercontent.com/HyeJinSeok/ELK/main/images/elk8.png" width=700 alt="graph3">
+
+<br>
+
+#### < 우수회원 >
+
+<img src="https://raw.githubusercontent.com/HyeJinSeok/ELK/main/images/elk9.png" width=700 alt="graph4">
+
+<br>
+
+#### < 브랜드별 성별 인기도 >
+
+<img src="https://raw.githubusercontent.com/HyeJinSeok/ELK/main/images/elk10.png" width=700 alt="graph5">
 
 <br><br>
 
@@ -325,12 +331,13 @@ output {
 
 • 예) ‘삭스’가 들어간 **부츠 카테고리 상품** (=삭스 부츠)도 양말 질의와 텍스트 일치도가 높아져 **상단에 노출**되는 상황 <br>
 
-<img src="https://github.com/user-attachments/assets/34fb0a63-4553-470c-b2fd-c3f6f3274560" alt="검색 문제 도해" width="600">
+
+<img src="https://raw.githubusercontent.com/HyeJinSeok/ELK/main/images/elk11.png" width=600 alt="problem">
 
 <br>
 
 > [!NOTE]
-> #### - 문제점 관찰 방법 <br>
+> #### - 문제 관찰 방법 <br>
 > - “후드” 검색 ⇒ 후드티가 상단에 많이 노출됨 <br>
 > - “후드 집업” 검색 ⇒ 후드 집업이 상단이지만 비의도 상품이 일부 끼어듦 <br>
 > - “후드” 검색에서 후드 달린 패딩 등 관련도 낮은 아우터가 상단에 뜨는 경우가 있음 <br><br>
@@ -344,15 +351,15 @@ output {
 
 <br>
 
-### < ‘후드’ 질의에 따른 Elasticsearch hits 일부 >
+#### < ‘후드’ 질의에 따른 Elasticsearch hits 일부 >
 
 
-![image](https://github.com/user-attachments/assets/5a36be55-484e-4436-8f1e-7234326a030b)
+<img src="https://raw.githubusercontent.com/HyeJinSeok/ELK/main/images/elk12.png" width=800 alt="hits">
 
 
 − ‘후드’ 검색 시, 상품명에 ‘후드’만 있는 상품과 ‘후드 집업’이 함께 상단에 노출됨 <br>
 
-− 이때 두 결과의 랭킹 점수(_score)가 1.6701219로 거의 동일해 우선순위 구분이 어려움 <br>
+− 이때 두 결과의 **랭킹 점수(_score)가 1.6701219로 거의 동일**해 우선순위 구분이 어려움 <br>
 
 <br>
 
@@ -374,9 +381,8 @@ output {
 
 • 동의어 확장은 유지하되, **최종 랭킹**은 카테고리 신호 중심으로 재정렬함
 
-<br>
 
-![image](https://github.com/user-attachments/assets/52c41069-5728-433f-b088-b553cf1ccf9d)
+<img src="https://raw.githubusercontent.com/HyeJinSeok/ELK/main/images/elk13.png" width=600 alt="solution">
 
 <br>
 
@@ -413,7 +419,9 @@ POST /musinsa/_search
 
 <br>
 
-### 수행 결과
+### 💡수행 결과
+
+<img src="https://raw.githubusercontent.com/HyeJinSeok/ELK/main/images/elk14.png" width=800 alt="result1">
 
 <br>
 
@@ -448,83 +456,17 @@ POST /musinsa/_search
 }
 ```
 
-이를 통해 확실한 score 차이를 확인할 수 있었다.
+### 💡수행 결과
 
+<img src="https://raw.githubusercontent.com/HyeJinSeok/ELK/main/images/elk15.png" width=800 alt="result1">
 
-```
-        "_index" : "musinsa",
-        "_type" : "_doc",
-        "_id" : "3",
-        "_score" : 5.902894,
-        "_source" : {
-          "category" : [
-            "상의 ",
-            " 후드 티셔츠"
-          ],
-          "top_category" : "상의 ",
-          "product_name" : "그래픽 베이직 후드",
-          "sub_category" : " 후드 티셔츠",
-        }
-      },
-      {
-        "_index" : "musinsa",
-        "_type" : "_doc",
-        "_id" : "111",
-        "_score" : 3.9028943,
-        "_source" : {
-          "category" : [
-            "아우터 ",
-            " 후드 집업"
-          ],
-          "top_category" : "아우터 ",
-          "product_name" : "투웨이 후드 집업",
-          "sub_category" : " 후드 집업"
-        }
-```
-<br>
-
-
-BM25 값을 직접 조정하게 되면서 score 값 또한 더 확실한 차이를 만들어낼 수 있었다.
-
-
-```
-      {
-        "_index" : "musinsa",
-        "_type" : "_doc",
-        "_id" : "3",
-        "_score" : 4.402894,
-        "_source" : {
-          "category" : [
-            "상의 ",
-            " 후드 티셔츠"
-          ],
-          "top_category" : "상의 ",
-          "product_name" : "그래픽 베이직 후드",
-          "sub_category" : " 후드 티셔츠",
-        }
-      },
-      {
-        "_index" : "musinsa",
-        "_type" : "_doc",
-        "_id" : "111",
-        "_score" : 1.9028943,
-        "_source" : {
-          "category" : [
-            "아우터 ",
-            " 후드 집업"
-          ],
-          "top_category" : "아우터 ",
-          "product_name" : "투웨이 후드 집업",
-          "sub_category" : " 후드 집업",
-      },
-```
 <br>
 
 ---
 
 <br>
 
-## Nori를 사용한 Analyze
+## 5. Nori를 사용한 Analyze
 
 
 ![image](https://github.com/user-attachments/assets/e0311c39-5271-45bb-97fa-706c58f60b09)
@@ -684,9 +626,13 @@ GET /musinsa_with_nori/_search
 ```
 사용자 정의 사전을 포함한 nori 활용을 위해서는 위의 코드와 같이 user_dictionary를 포함해서 사용할 수 있다.
 
+<br>
 
+---
 
-## 트러블 슈팅
+<br>
+
+## 6. 트러블 슈팅
 
 
 ### Timezone 세팅 및 새로운 정보 update 문제
@@ -852,7 +798,11 @@ field에 대한 fielddata를 true로 설정해주는 과정을 통해 text 필�
 
 <br>
 
-## 회고
+---
+
+<br>
+
+## 7. 회고
 
 
 석혜진 : ElasticSearch와 MySQL을 연결하기 위해 Logstash에 JDBC 설정을 구성하는 프로세스를 이해하게 되었다. 이후 Kibana를 활용하여 데이터를 시각화하는 과정에서 Logstash의 conf 파일에 필터를 구성하고, KQL 명령어를 익히는 실습을 수행했다. 추후에는 대용량 데이터를 삽입하고 효율적으로 전처리하는 과정을 실습해볼 계획이다.
