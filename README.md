@@ -143,11 +143,11 @@ CREATE TABLE customer_order (
 ### ① JDBC 입력 설정
 
 
-− 원격 MySQL에서 customer_order 테이블을 읽어오도록 **input { jdbc { ... } }** 구성함 <br>
+• 원격 MySQL에서 customer_order 테이블을 읽어오도록 **input { jdbc { ... } }** 구성함 <br>
 
-− 연결 정보 및 드라이버를 지정함 <br>
+• 연결 정보 및 드라이버를 지정함 <br>
 
-− **:sql_last_value** 기준으로 신규/변경분만 가져오도록 구성함 <br>
+• **:sql_last_value** 기준으로 신규/변경분만 가져오도록 구성함 <br>
 
 ```
 input {
@@ -170,11 +170,11 @@ input {
 ### ② 데이터 필터링 
 
 
-− **category**를 > 기준으로 분해해 top_category, sub_category 생성함 <br>
+• category를 **> 기준으로 분해**해 top_category, sub_category 생성함 <br>
 
-− **address**를 공백 기준으로 분해해 city, state 추출함 <br>
+• address를 **공백 기준으로 분해**해 city, state 추출함 <br>
 
-− **order_date**에서 날짜/시간을 분리 저장함 <br>
+• order_date에서 날짜/시간을 분리 저장함 <br>
 
 ![image](https://github.com/user-attachments/assets/43487d17-d2c1-4afd-8050-f88eaf3e48a6)![image](https://github.com/user-attachments/assets/f80c44cd-c2c1-4f73-989b-c7c9abeffb95)
 ![image](https://github.com/user-attachments/assets/9967ac39-d6ae-46f8-8555-ee0efa7ef456)
@@ -247,9 +247,9 @@ filter {
 ### ③ Elasticsearch 색인
 
 
-− 전처리된 이벤트를 Elasticsearch **인덱스 musinsa**로 색인함 <br>
+• 전처리된 이벤트를 Elasticsearch **인덱스 musinsa**로 색인함 <br>
 
-− 중복 방지를 위해 **document_id = order_no**로 고정해 idempotent하게 갱신되도록 함
+• 중복 방지를 위해 **document_id = order_no**로 고정해 idempotent하게 갱신되도록 함
 
 ```
 output {
@@ -339,12 +339,12 @@ output {
 > -  “후드” vs “후드 집업”처럼 단어 수 및 구성이 비슷하면 BM25 점수도 비슷해 구분력 떨어짐 <br>
 > -  brand 필드는 존재하나 일관된 가중치 기준 잡기 어려워 노이즈 가능 <br><br>
 > #### - 결론 <br>
-> - 단순 키워드 점수만으론 부족하기 때문에 랭킹에서 카테고리 가중치를 최우선으로 둠 <br>
+> - 단순 키워드 점수만으론 부족하기 때문에 랭킹에서 카테고리 가중치를 최우선으로 둬야 함 <br>
 > - “후드” 질의는 상의/후드 티셔츠 우선, “후드 집업” 질의는 아우터/후드 집업 우선으로 정렬되어야 함
 
 <br>
 
-### < ‘후드’ 질의의 Elasticsearch hits 일부 >
+### < ‘후드’ 질의에 따른 Elasticsearch hits 일부 >
 
 
 ![image](https://github.com/user-attachments/assets/5a36be55-484e-4436-8f1e-7234326a030b)
@@ -360,31 +360,37 @@ output {
 
 <br>
 
-## 5. 적합도 반영 전략
+## 5. 의도 기반 랭킹 시스템 설계
 
+<br>
 
-− 필드 가중치 우선순위를 **category > product_name > brand**로 설정함 <br>
+• 검색 결과가 **카테고리 및 구문 신호** 중심으로 재정렬되는 의도 기반의 랭킹이 필요함 <br>
 
-− 질의어가 문구로 정확히 들어가면 구문 일치 부스트(**추가 가중치**)를 부여함 <br>
+• 필드 가중치 우선순위를 "**category > product_name > brand**"로 둠으로써 의도 카테고리 일치도와 정렬 안정성을 높임 <br>
 
-− 비의도 카테고리에는 **페널티**를 적용해 점수를 낮춤 <br>
+• 질의어가 제품명의 문구와 정확히 일치하면 match_phrase로 **추가 가중치**를 부여함 <br>
 
-− 기존의 동의어 사전 알고리즘은 유지하되, 최종 랭킹은 **카테고리 신호 중심**으로 재정렬함 <br>
+• 비의도 카테고리에는 **페널티**를 적용해 점수를 낮춤 <br>
 
+• 동의어 확장은 유지하되, **최종 랭킹**은 카테고리 신호 중심으로 재정렬함
+
+<br>
 
 ![image](https://github.com/user-attachments/assets/52c41069-5728-433f-b088-b553cf1ccf9d)
 
 <br>
 
-### 🎯스코어링 구현
-
-<br>
-
-**① function_score로 가중치 합산** <br>
-
-• BM25 점수는 그대로 두고 필드별 weight를 더함 (빠르고 단순) <br>
+### 🎯Scoring 전략 (1) : function_score로 가중치 합산하기
 
 ```
+
+// 🔸top_category : 1차 분류(의도 카테고리) → 가장 큰 weight
+// 🔸sub_category : 2차 세부 분류(후드 티셔츠 vs 후드 집업) → 보조 weight
+// 🔸product_name : 구문 일치 보정(match_phrase)
+
+// 🔸스코어 결합 : score_mode=sum, boost_mode=sum → 최종점수 = BM25 + (모든 weight의 합)
+
+
 POST /musinsa/_search
 {
   "query": {
@@ -407,11 +413,21 @@ POST /musinsa/_search
 
 <br>
 
-**② script_score로 BM25에 직접 보정함** <br>
+### 수행 결과
 
-• _score(BM25)에 가감산해서 좀 더 큰 격차를 만들 때 사용 (유연하지만 상대적으로 느림) <br>
+<br>
+
+### 🎯Scoring 전략 (2) : script_score로 BM25에 직접 보정하기
+
 
 ```
+
+// 🔸top_category : 상의 +3.0, 아우터 +0.5 (1차 분류, 가장 큰 영향)
+// 🔸sub_category : 후드 티셔츠 +2.0, 후드 집업 +0.5 (2차 분류, 보조 영향)
+
+// 🔸스코어 결합 : script_score → 최종점수 = BM25(_score) + 카테고리 가중치(직접 가산)
+
+
 POST /musinsa/_search
 {
   "query": {
@@ -431,224 +447,6 @@ POST /musinsa/_search
   }
 }
 ```
-
-<details>
-  <summary>무신사에서 "후드"를 검색하게 되면 후드 집업이 아닌 후드티 상품이 상위 데이터로 검색되는 화면을 볼 수 있다.</summary>
-  <p align="center">
-    <img src="https://github.com/user-attachments/assets/edbaf461-23d6-4621-a513-47c4ac83d638">
-  </p>
-</details>
-
-<details>
-  <summary>이에 반해 "후드 집업"을 검색하게 되면 결과 화면에는 후드티가 아닌 후드 집업 상품이 상위 데이터로 나타난다.</summary>
-  <p align="center">
-    <img src="https://github.com/user-attachments/assets/da52d143-ed2e-4ac0-901a-2ca062e8139a">
-  </p>
-</details>
-
-그러나 "후드 집업" 혹은 "후드"를 검색하면 무조건 해당 제품만 검색되는 것은 아니다.
-해당 결과 화면에서는 후드 집업을 검색한 결과 중 상위 데이터의 일부는 후드 집업과 관련이 없는 상품이 존재하는 것을 볼 수 있다.
-
-<details>
-  <summary>또한 후드를 검색했을 때 모자가 달린 패딩과 같은 관련성이 적은 아우터가 검색 결과에 포함된 것을 볼 수 있다.</summary>
-  <p align="center">
-    <img src="https://github.com/user-attachments/assets/2347fec6-ed6f-4edb-b045-54d90b25b0b0">
-  </p>
-</details>
-
-<br>
-이는 검색 엔진에서 단순히 키워드를 통한 결과를 반환하는 것이 아님을 알 수 있다.
-
-
-
-
-![image](https://github.com/user-attachments/assets/b49d9b6a-4445-443b-aab0-7bb81a9072d5)![image](https://github.com/user-attachments/assets/7cd07175-7b4c-4421-bb77-d6985f550580)
-
-
-스코어링 수식에서 카테고리와 브랜드의 가중치 또한 포함되는 것을 알 수 있었고 지퍼가 없는 "후드"를 원하는 사용자가 후드라는 단어를 검색하면 "후드 티셔츠" 카테고리의 상품이 상위에 나오게 된다.
-
-
-이에 반해 "후드 집업"을 검색하게 되면 후드 집업 카테고리에 속한 제품들이 나오게 된다.
-
-
-이를 통해 결과 화면에 단순히 키워드에 대한 score 전략으로는 충분한 데이터 필터링이 되지 않기 때문에 카테고리의 가중치가 더 클 것이라 추론했다.
-
-
-현재 사용 중인 Elastic Search에서 브랜드 관련 Field를 보유하고 있지만 이에 대한 가중치 기준을 세우는데 어려움이 존재한다.
-
-
-이로 인해 좀 더 확실한 기준을 세울 수 있는 카테고리를 상품과 함께 연동되어 가중치 계산이 되도록 진행했다.<br><br>
-
-
-
-![image](https://github.com/user-attachments/assets/5a36be55-484e-4436-8f1e-7234326a030b)
-
-
-"후드"라는 키워드를 검색하게 되면 후드 집업이라는 단순히 후드라는 상품명을 가진 제품이 더 상위에 포진해야 된다.
-
-
-그러나 현재 쿼리를 통한 검색 결과를 보게 되면 후드라는 단어만 상품명에 포함한 제품과 후드 집업이라는 단어를 상품명에 포함한 제품의 score가 동일한 것을 볼 수 있다.
-
-
-이는 BM25 알고리즘에서 하나의 document 내의 단어 개수 중 검색 키워드 출현 개수 비율을 반영하고 있으며 두 개의 데이터 모두 3개의 단어와 하나의 "후드" 단어를 포함하고 있기 때문이라 예상해볼 수 있었다.
-
-
-```
-POST /musinsa/_search
-{
-  "query": {
-    "function_score": {
-      "query": {
-        "match": {
-          "product_name": "후드"
-        }
-      },
-      "functions": [
-        {
-          "filter": {
-            "term": {
-              "sub_category.keyword": "후드 티셔츠"
-            }
-          },
-          "weight": 3.0  // 카테고리: 상의 > 후드 티셔츠
-        },
-        {
-          "filter": {
-            "term": {
-              "sub_category.keyword": "후드 집업"
-            }
-          },
-          "weight": 0.5  // 카테고리: 아우터 > 후드 집업
-        },
-        {
-          "filter": {
-            "match_phrase": {
-              "product_name": "후드"
-            }
-          },
-          "weight": 2.0  // 상품명: "후드"
-        }
-      ],
-      "score_mode": "sum",  // 가중치를 단순 합산
-      "boost_mode": "sum"  // 기본 BM25 스코어와 가중치를 합산
-    }
-  }
-}
-```
-
-
-
-1차적으로 진행한 가중치 개선에서 "후드"라는 단어와 함께 하위 카테고리의 가중치를 조정했고 후드티의 score가 대체적으로 후드 집업 상품에 비해 높아진 것을 확인할 수 있었다.
-
-
-```
-        "_index" : "musinsa",
-        "_type" : "_doc",
-        "_id" : "111",
-        "_score" : 3.4028943,
-        "_source" : {
-          "category" : [
-            "아우터 ",
-            " 후드 집업"
-          ],
-          "top_category" : "아우터 ",
-          "@timestamp" : "2025-01-21T16:56:20.123Z",
-          "product_name" : "투웨이 후드 집업",
-          "sub_category" : " 후드 집업",
-        }
-      },
-      {
-        "_index" : "musinsa",
-        "_type" : "_doc",
-        "_id" : "2",
-        "_score" : 3.4028943,
-        "_source" : {
-          "category" : [
-            "상의 ",
-            " 후드 티셔츠"
-          ],
-          "top_category" : "상의 ",
-          "@timestamp" : "2025-01-21T16:56:20.122Z",
-          "product_name" : "미니멀 오버핏 후드",
-          "sub_category" : " 후드 티셔츠",
-        }
-      },
-```
-
-
-그러나 문장에 존재하는 단어의 개수가 같은 경우에 후드 집업과 후드티의 score가 동일한 결과를 일부 확인할 수 있었다.
-
-
-이를 좀 더 개선하기 위해 상위 카테고리와 하위 카테고리 모두 가중치를 조정했다. 무신사의 카테고리 분류에서는 후드 집업은 아우터로, 후드 티셔츠는 상의로 분류하고 있는 점을 고려해 조정했다.
-
-
-```
-POST /musinsa/_search
-{
-  "query": {
-    "function_score": {
-      "query": {
-        "match": {
-          "product_name": "후드"
-        }
-      },
-      "functions": [
-        {
-          "filter": {
-            "term": {
-              "top_category": "상의"
-            }
-          },
-          "weight": 3.0  // "상의" 카테고리 가중치
-        },
-        {
-          "filter": {
-            "term": {
-              "top_category": "아우터"
-            }
-          },
-          "weight": 0.5  // "아우터" 카테고리 가중치
-        },
-        {
-          "filter": {
-            "term": {
-              "sub_category": "후드 티셔츠"
-            }
-          },
-          "weight": 2.0  // "후드 티셔츠" 하위 카테고리 가중치
-        },
-        {
-          "filter": {
-            "term": {
-              "sub_category": "후드 집업"
-            }
-          },
-          "weight": 0.5  // "후드 집업" 하위 카테고리 가중치
-        },
-        {
-          "filter": {
-            "match_phrase": {
-              "product_name": "후드"
-            }
-          },
-          "weight": 1.5  // "후드" 포함 가중치
-        },
-        {
-          "filter": {
-            "match_phrase": {
-              "product_name": "후드 집업"
-            }
-          },
-          "weight": 0.5  // "후드 집업" 포함 가중치 감소
-        }
-      ],
-      "score_mode": "sum",  // 점수 합산
-      "boost_mode": "sum"  // 기본 BM25와 합산
-    }
-  }
-}
-```
-
 
 이를 통해 확실한 score 차이를 확인할 수 있었다.
 
@@ -685,50 +483,6 @@ POST /musinsa/_search
 ```
 <br>
 
-- script_score를 통한 score 차이 개선
-
-
-위에서 사용한 예시는 function_score 조정을 통한 결과를 확인한 것이다.
-
-
-script_score 조정을 진행하게 되면 BM25 결과 값을 직접 조정할 수 있다.
-
-
-```
-POST /musinsa/_search
-{
-  "query": {
-    "script_score": {
-      "query": {
-        "match": {
-          "product_name": "후드"
-        }
-      },
-      "script": {
-        "source": """
-          double score = _score;
-
-          // 상위 카테고리 가중치
-          if (doc['top_category'].value == '상의') {
-            score += 3.0;
-          } else if (doc['top_category'].value == '아우터') {
-            score += 0.5;
-          }
-
-          // 하위 카테고리 가중치
-          if (doc['sub_category'].value == '후드 티셔츠') {
-            score += 2.0;
-          } else if (doc['sub_category'].value == '후드 집업') {
-            score += 0.5;
-          }
-
-          return score;
-        """
-      }
-    }
-  }
-}
-```
 
 BM25 값을 직접 조정하게 되면서 score 값 또한 더 확실한 차이를 만들어낼 수 있었다.
 
@@ -766,26 +520,11 @@ BM25 값을 직접 조정하게 되면서 score 값 또한 더 확실한 차이�
 ```
 <br>
 
-#### `function_score`와 `script_score` 비교
-
-
-| **특징**                  | **`function_score`**                                       | **`script_score`**                                      |
-|--------------------------|---------------------------------------------------------|-------------------------------------------------------|
-| **BM25 스코어 사용 여부**    | BM25 스코어를 기반으로 가중치를 조정 (BM25 스코어를 변경하지 않음).  | BM25 스코어를 포함하여 사용자 정의 점수 계산 가능 (직접 변경 가능). |
-| **작동 방식**              | BM25 스코어에 가중치를 곱하거나 더해 점수를 조정.              | `_score`를 기반으로 사용자 정의 계산식을 작성하여 점수 계산.       |
-| **스코어 계산 공식**        | 최종 스코어 = BM25 스코어 × 가중치                          | 최종 스코어 = 사용자 정의 계산식                              |
-| **유연성**                 | 사전 정의된 함수(`weight`, `boost_mode` 등) 사용.          | 사용자 정의 스크립트를 통해 세부 계산식 작성 가능.         |
-| **성능**                  | 빠름 (사전 정의된 함수만 사용).                              | 상대적으로 느림 (스크립트 실행 시 계산 오버헤드 발생).       |
-| **사용 목적**              | 가중치 조정 및 필터링을 통한 점수 개선.                         | 점수 계산식이나 복잡한 조건을 유연하게 처리.                |
-| **적용 가능한 함수**         | 가중치(`weight`), 필드 기반(`field_value_factor`), 필터(`filter`). | 사용자 정의 계산식 (BM25 스코어 포함).                    |
-| **권장 상황**              | 단순한 가중치 조정이 필요한 경우.                              | 복잡한 조건이나 사용자 정의 계산식이 필요한 경우.            |
-
-<br>
-
 ---
+
 <br>
 
-### Nori를 사용한 Analyze
+## Nori를 사용한 Analyze
 
 
 ![image](https://github.com/user-attachments/assets/e0311c39-5271-45bb-97fa-706c58f60b09)
