@@ -15,13 +15,38 @@ ELK 스택을 활용해 온라인 쇼핑몰(MUSINSA)의 주문 데이터를 처�
 
 <br>
 
-## ◈ 팀원 소개
+**• 프로젝트 기간** <br>
+
+📆 2025.01.14 ~ 01.20
 
 <br>
+
+**• 팀원 소개**
+
 
 |<img src="https://avatars.githubusercontent.com/u/193798531?v=4" width="150" height="150"/>|<img src="https://avatars.githubusercontent.com/u/74342019?v=4" width="150" height="150"/>|<img src="https://avatars.githubusercontent.com/u/153366521?v=4" width="150" height="150"/>|<img src="https://avatars.githubusercontent.com/u/127267532?v=4" width="150" height="150"/>|
 |:-:|:-:|:-:|:-:|
 |[@riyeong0916](https://github.com/riyeong0916)|[@CooolRyan](https://github.com/CooolRyan)|[@parkjhhh](https://github.com/parkjhhh)|[@HyeJinSeok](https://github.com/HyeJinSeok)|
+
+<br>
+
+**• 목차** <br>
+
+1. 데이터 수집 및 전처리 <br>
+
+2. Logstash로 구현한 데이터 인제스트 <br>
+
+3. Kibana를 통한 시각화 <br>
+
+4. 기존 검색 알고리즘의 문제점 <br>
+
+5. 의도 기반 랭킹 시스템 설계 <br>
+
+6. 한국어 토큰화 기반 검색 품질 개선 <br>
+
+7. 트러블 슈팅 <br>
+
+8. 회고 <br>
 
 <br>
 
@@ -131,8 +156,7 @@ CREATE TABLE customer_order (
 
 <br>
 
-## 2. Logstash: Data Ingestion
-
+## 2. Logstash로 구현한 데이터 인제스트
 <br>
 
 • Logstash의 파이프라인은 **input → filter → output** 구조임 (.conf 파일)
@@ -288,32 +312,32 @@ output {
 
 #### < 일별 주문 건수 및 매출 >
 
-<img src="https://raw.githubusercontent.com/HyeJinSeok/ELK/main/images/elk6.png" width=700 alt="graph1">
+<img src="https://raw.githubusercontent.com/HyeJinSeok/ELK/main/images/elk6.png" width=750 alt="graph1">
 
 
 <br>
 
 #### < 2025년 주문 현황 >
 
-<img src="https://raw.githubusercontent.com/HyeJinSeok/ELK/main/images/elk7.png" width=700 alt="graph2">
+<img src="https://raw.githubusercontent.com/HyeJinSeok/ELK/main/images/elk7.png" width=600 alt="graph2">
 
 <br>
 
 #### < 2025년 일일 매출 >
 
-<img src="https://raw.githubusercontent.com/HyeJinSeok/ELK/main/images/elk8.png" width=700 alt="graph3">
+<img src="https://raw.githubusercontent.com/HyeJinSeok/ELK/main/images/elk8.png" width=600 alt="graph3">
 
 <br>
 
 #### < 우수회원 >
 
-<img src="https://raw.githubusercontent.com/HyeJinSeok/ELK/main/images/elk9.png" width=700 alt="graph4">
+<img src="https://raw.githubusercontent.com/HyeJinSeok/ELK/main/images/elk10.png" width=600 alt="graph4">
 
 <br>
 
 #### < 브랜드별 성별 인기도 >
 
-<img src="https://raw.githubusercontent.com/HyeJinSeok/ELK/main/images/elk10.png" width=700 alt="graph5">
+<img src="https://raw.githubusercontent.com/HyeJinSeok/ELK/main/images/elk9.png" width=600 alt="graph5">
 
 <br><br>
 
@@ -351,13 +375,13 @@ output {
 
 <br>
 
-#### < ‘후드’ 질의에 따른 Elasticsearch hits 일부 >
+< 후드 질의에 따른 **Elasticsearch hits** 일부 >
 
 
 <img src="https://raw.githubusercontent.com/HyeJinSeok/ELK/main/images/elk12.png" width=800 alt="hits">
 
 
-− ‘후드’ 검색 시, 상품명에 ‘후드’만 있는 상품과 ‘후드 집업’이 함께 상단에 노출됨 <br>
+− ‘후드’ 검색 시 상품명에 ‘후드’만 있는 상품과 ‘후드 집업’이 함께 상단에 노출됨 <br>
 
 − 이때 두 결과의 **랭킹 점수(_score)가 1.6701219로 거의 동일**해 우선순위 구분이 어려움 <br>
 
@@ -466,46 +490,76 @@ POST /musinsa/_search
 
 <br>
 
-## 5. Nori를 사용한 Analyze
+## 5. 한국어 토큰화 기반 검색 품질 개선
+
+<br>
+
+• 한국어 상품명 및 카테고리를 **형태소 단위로 표준화**하면 검색 정확도와 집계 신뢰도를 올릴 수 있음 <br>
+
+• **Nori**는 Elasticsearch에서 쓰는 한국어 형태소 분석기로, **analysis-nori 플러그인**으로 제공됨 <br>
+
+• [Elasticsearch Nori 설치 공식 문서](https://www.elastic.co/docs/reference/elasticsearch/plugins/analysis-nori)
+
+<img src="https://raw.githubusercontent.com/HyeJinSeok/ELK/main/images/elk16.png" width=400 alt="nori">
+
+<br>
+
+### < 한국어 토큰화 적용 플로우 >
 
 
-![image](https://github.com/user-attachments/assets/e0311c39-5271-45bb-97fa-706c58f60b09)
-<br><br>
+① **커스텀 analyzer 구성**: 한국어 형태소 분석 (소문자 변환 / 읽기형 / 불용품사 처리) 조합 <br>
+
+② 필드 적용: product_name, category, sub_category, top_category 등에 동일 분석 규칙 적용함 <br>
+
+③ 새 인덱스 생성 → 재인덱싱: 기존 인덱스는 변경 불가하기 때문에 **새 인덱스** 만든 뒤 데이터를 이관함 <br>
+
+④ 복합어 처리: 복합어는 **원형 토큰과 부분 토큰**을 동시에 유지하도록 설정함 <br>
+
+⑤ 사용자 사전: **브랜드명을 사전에 추가**해 한 토큰으로 인식시키고 매칭 정확도 높임 <br>
+
+⑥ 토큰 단위 집계: 집계를 문자열 전체가 아니라 **형태소 토큰 기준**으로 돌려 상위 키워드 및 패턴 파악 쉽게 함 <br>
+
+<br>
+
+### < 결과 화면 비교 >
 
 
-무신사의 검색 서비스 프로토타입에서 형태소 분석을 위한 토크나이저로 Nori(Lucene의 한글 형태소 분석기)의 파이썬 버전 Pynori를 사용했다.
+• Nori 적용 전 — 문자열 전체값 기준 집계 / Nori 적용 후 — 형태소 토큰 기준 집계
 
 
-이를 통해 동의어 및 사용자 사전을 커스텀하게 적용할 수 있기 때문에, 기존에 무신사 검색 서비스에서 사용 중이던 사전을 그대로 적용하여 최대한 실제 서비스와 비슷한 시뮬레이션 환경을 구현해냈다.
+<img src="https://raw.githubusercontent.com/HyeJinSeok/ELK/main/images/elk17.png" width=700 alt="nori_compare">
 
+<br>
 
-여기서 착안해 elastice search에서 제공하는 nori를 통한 상품 데이터 분석을 진행해보고자 했다.
+• "후드 집업"이 토큰화에서 **"후드", "집", "업"으로** 과분해되어 집계/검색이 노이즈 많아짐 <br>
 
+• 인덱스 생성 시 nori_tokenizer.decompound_mode: "mixed"로 설정해야 함 <br>
 
-```
-elasticsearch-plugin install analysis-nori
-```
-
-
-먼저 nori를 사용하기 위한 plugin 설치를 진행한다.
-
+• user_dictionary에 도메인 용어로 등록해 하나의 토큰으로 고정할 수도 있음 <br>
 
 ```
 PUT /musinsa_with_nori
 {
   "settings": {
     "analysis": {
+      "tokenizer": {
+        "nori_tokenizer": {
+          "type": "nori_tokenizer",
+          "decompound_mode": "mixed",                 // 원형 토큰 및 부분 토큰 동시 유지
+          "user_dictionary": "analysis/userdict_ko.txt" // 사용자 사전 경로
+        }
+      },
+      "filter": {
+        "nori_pos_min": {
+          "type": "nori_part_of_speech",
+          "stoptags": ["J","E","SY","SP","SSC","SSO"]  // 조사, 어미, 기호, 괄호류 제거
+        }
+      },
       "analyzer": {
         "nori_analyzer": {
           "type": "custom",
           "tokenizer": "nori_tokenizer",
-          "filter": ["lowercase", "nori_readingform", "nori_part_of_speech"]
-        }
-      },
-      "filter": {
-        "nori_part_of_speech": {
-          "type": "nori_part_of_speech",
-          "stoptags": ["E", "IC", "J", "MAG", "MAJ", "MM", "SP", "SSC", "SSO", "SY", "UNA", "UNKNOWN", "VA", "VCN", "VCP", "VV", "VX", "XPN", "XR", "XSA", "XSN", "XSV"]
+          "filter": ["lowercase", "nori_readingform", "nori_pos_min"]
         }
       }
     }
@@ -516,7 +570,7 @@ PUT /musinsa_with_nori
       "product_name": {
         "type": "text",
         "analyzer": "nori_analyzer",
-        "fielddata": true  // fielddata 활성화
+        "fielddata": true
       },
       "category": {
         "type": "text",
@@ -533,98 +587,13 @@ PUT /musinsa_with_nori
         "analyzer": "nori_analyzer",
         "fielddata": true
       },
-      "price": { "type": "long" },
-      "brand": { "type": "keyword" },
+      "price":   { "type": "long" },
+      "brand":   { "type": "keyword" },
       "updated_at": { "type": "date" }
     }
   }
 }
 ```
-
-
-이 후 nori를 사용하기 위한 새로운 인덱스를 생성한다. 기존에 생성된 인덱스를 수정하는 것이 불가능 하기 때문에 새로운 인덱스를 생성하고 기존 인덱스의 데이터를 이관하는 작업을 진행했다.
-
-
-```
-POST /_reindex
-{
-  "source": {
-    "index": "musinsa"
-  },
-  "dest": {
-    "index": "musinsa_with_nori"
-  }
-}
-```
-
-
-재인덱싱 과정 이후 aggregation function을 통해 search를 진행하게 되면 형태소 분석을 통한 파싱이 진행된다.
-
-
-```
-GET /musinsa_with_nori/_search
-{
-  "size": 0,
-  "aggs": {
-    "product_name_count": {
-      "terms": {
-        "field": "product_name",
-        "size": 10
-      }
-    }
-  }
-}
-```
-
-
-- 결과 화면 비교 및 개선
-
-
-
-
-기존의 aggregation function을 통한 count를 진행하게 되면 product_name의 전체 value를 기준으로 count 되는 모습을 보여주었다.
-
-
-![image](https://github.com/user-attachments/assets/2fe5532c-f622-4977-a5f4-149054f6efce)
-<br><br>
-
-
-그러나 field에 nori 사용을 위한 analyze를 추가한 뒤 aggregation function을 사용하면 형태소 별 분리가 된 결과를 볼 수 있다.
-
-
-![image](https://github.com/user-attachments/assets/047958a7-bf11-47cc-b810-6bcd9f07122d)
-<br><br>
-
-
-이 때 "후드 집업" 이라는 단어가 "후드", "집", "업"으로 분리되는 것을 확인할 수 있다.
-
-
-이는 nori analyze에서 제공하는 복합어 처리 과정에서 단어가 분리되는 것이다. 그러나 이런 형태로 데이터 분석을 진행하게 된다면 정확한 분석이 불가능할 것이라 생각했다.
-
-
-```
-"analysis": {
-  "tokenizer": {
-    "nori_tokenizer": {
-      "type": "nori_tokenizer",
-      "decompound_mode": "mixed"  // 복합어 및 원래 단어
-    }
-  }
-```
-
-
-이를 해결하기 위해 인덱스 생성 시 decompound_mode 설정을 mix로 설정해 복합어 분리가 되지 않은 데이터 또한 같이 확인할 수 있었다.
-
-
-```
-     "tokenizer": {
-        "nori_tokenizer": {
-          "type": "nori_tokenizer",
-          "user_dictionary": "analysis/userdict_ko.txt"
-        }
-      }
-```
-사용자 정의 사전을 포함한 nori 활용을 위해서는 위의 코드와 같이 user_dictionary를 포함해서 사용할 수 있다.
 
 <br>
 
